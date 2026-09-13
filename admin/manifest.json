@@ -1,22 +1,22 @@
 {
-  "name": "CrickSo Admin Panel",
-  "short_name": "CrickSo Admin",
-  "description": "Admin panel for managing complaints and users",
-  "start_url": "./complaints.html",
-  "display": "standalone",
-  "background_color": "#0a1628",
-  "theme_color": "#0a1628",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='32' fill='%230a1628'/><rect x='24' y='24' width='144' height='144' rx='24' fill='%23111d35' stroke='%232563eb' stroke-width='4'/><text x='96' y='115' text-anchor='middle' font-family='Arial' font-size='72' font-weight='bold' fill='%232563eb'>CS</text><text x='96' y='148' text-anchor='middle' font-family='Arial' font-size='24' fill='%2394a3b8'>ADMIN</text></svg>",
-      "sizes": "192x192",
-      "type": "image/svg+xml"
-    },
-    {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%230a1628'/><rect x='48' y='48' width='416' height='416' rx='64' fill='%23111d35' stroke='%232563eb' stroke-width='8'/><text x='256' y='300' text-anchor='middle' font-family='Arial' font-size='192' font-weight='bold' fill='%232563eb'>CS</text><text x='256' y='390' text-anchor='middle' font-family='Arial' font-size='64' fill='%2394a3b8'>ADMIN</text></svg>",
-      "sizes": "512x512",
-      "type": "image/svg+xml"
-    }
-  ]
+    "name": "CrickSo Admin Panel",
+    "short_name": "CrickSo Admin",
+    "description": "CrickSo Admin Panel - Manage Complaints",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#0a1628",
+    "theme_color": "#0a1628",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "../LOGO/photo_2026-09-13_16-32-37.jpg",
+            "sizes": "192x192",
+            "type": "image/jpeg"
+        },
+        {
+            "src": "../LOGO/photo_2026-09-13_16-32-37.jpg",
+            "sizes": "512x512",
+            "type": "image/jpeg"
+        }
+    ]
 }

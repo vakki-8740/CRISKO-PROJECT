@@ -1,393 +1,364 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <meta name="theme-color" content="#0a1628">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>CrickSo Admin - Settings</title>
-  <link rel="stylesheet" href="./style.css">
-  <link rel="manifest" href="./manifest.json">
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a1628">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>CrickSo Admin - Settings</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
-  <header class="header">
-    <div class="header-top">
-      <div class="logo">
-        <svg viewBox="0 0 32 32" fill="none">
-          <rect width="32" height="32" rx="8" fill="#2563eb"/>
-          <path d="M8 16c0-4.418 3.582-8 8-8s8 3.582 8 8-3.582 8-8 8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
-          <circle cx="16" cy="16" r="3" fill="#fff"/>
-        </svg>
-        <div>
-          <div class="logo-text">CrickSo Admin</div>
-          <div class="logo-sub">Settings</div>
+    <header class="header">
+        <div class="header-top">
+            <div class="logo">
+                <svg viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="8" fill="#2563eb"/>
+                    <path d="M8 16c0-4.418 3.582-8 8-8s8 3.582 8 8-3.582 8-8 8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="16" cy="16" r="3" fill="#fff"/>
+                </svg>
+                <div>
+                    <div class="logo-text">CrickSo Admin</div>
+                    <div class="logo-sub">Settings</div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </header>
+    </header>
 
-  <div class="main" style="padding-top:16px">
+    <div class="main">
+        <!-- General Section -->
+        <div class="settings-section">
+            <div class="settings-section-title">General</div>
+            <div class="settings-group">
+                <div class="settings-item">
+                    <div class="settings-item-left">
+                        <div class="settings-icon settings-icon-blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                        </div>
+                        <div>
+                            <div class="settings-text">Notifications</div>
+                            <div class="settings-subtext">Enable push notifications</div>
+                        </div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="notifToggle" checked onchange="saveSetting('notifications', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="settings-item">
+                    <div class="settings-item-left">
+                        <div class="settings-icon settings-icon-green">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <div class="settings-text">Auto Approve</div>
+                            <div class="settings-subtext">Auto-approve new complaints</div>
+                        </div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="autoApproveToggle" onchange="saveSetting('autoApprove', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="settings-item">
+                    <div class="settings-item-left">
+                        <div class="settings-icon settings-icon-purple">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                        </div>
+                        <div>
+                            <div class="settings-text">Language</div>
+                            <div class="settings-subtext">Select display language</div>
+                        </div>
+                    </div>
+                    <select class="custom-select" id="languageSelect" onchange="saveSetting('language', this.value)">
+                        <option value="en">English</option>
+                        <option value="hi">Hindi</option>
+                        <option value="ur">Urdu</option>
+                        <option value="bn">Bengali</option>
+                    </select>
+                </div>
+            </div>
+        </div>
 
-    <!-- General Section -->
-    <div class="settings-section">
-      <div class="settings-section-title">General</div>
-      <div class="settings-group">
-        <div class="settings-item">
-          <div class="settings-item-left">
-            <div class="settings-icon settings-icon-blue">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <!-- Telegram Section -->
+        <div class="settings-section">
+            <div class="settings-section-title">Telegram Bot</div>
+            <div class="settings-group">
+                <div class="settings-item" style="flex-direction:column;align-items:stretch;gap:12px;">
+                    <div class="settings-item-left">
+                        <div class="settings-icon settings-icon-blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                        </div>
+                        <div>
+                            <div class="settings-text">Telegram Configuration</div>
+                            <div class="settings-subtext">Send complaint data to Telegram channel</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        <div>
+                            <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:4px;">Bot Token</label>
+                            <input type="text" id="telegramBotToken" class="settings-input" placeholder="Enter your bot token" value="">
+                        </div>
+                        <div>
+                            <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:4px;">Chat ID</label>
+                            <input type="text" id="telegramChatId" class="settings-input" placeholder="Enter your chat ID" value="">
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn btn-primary" onclick="saveTelegramConfig()" style="flex:1;">Save Config</button>
+                            <button class="btn btn-secondary" onclick="testTelegram()" style="flex:1;">Test Send</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div>
-              <div class="settings-text">Notifications</div>
-              <div class="settings-subtext">Enable push notifications</div>
-            </div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="notifToggle" checked onchange="saveSetting('notifications', this.checked)">
-            <span class="toggle-slider"></span>
-          </label>
         </div>
-        <div class="settings-item">
-          <div class="settings-item-left">
-            <div class="settings-icon settings-icon-green">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </div>
-            <div>
-              <div class="settings-text">Auto Approve</div>
-              <div class="settings-subtext">Auto-approve new complaints</div>
-            </div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="autoApproveToggle" onchange="saveSetting('autoApprove', this.checked)">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div class="settings-item">
-          <div class="settings-item-left">
-            <div class="settings-icon settings-icon-purple">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-            </div>
-            <div>
-              <div class="settings-text">Language</div>
-              <div class="settings-subtext">Select display language</div>
-            </div>
-          </div>
-          <select class="custom-select" id="languageSelect" onchange="saveSetting('language', this.value)">
-            <option value="en">English</option>
-            <option value="hi">Hindi</option>
-            <option value="ur">Urdu</option>
-            <option value="bn">Bengali</option>
-          </select>
-        </div>
-      </div>
-    </div>
 
-    <!-- Data Section -->
-    <div class="settings-section">
-      <div class="settings-section-title">Data</div>
-      <div class="settings-group">
-        <div class="settings-item settings-item-action" onclick="exportData()">
-          <div class="settings-item-left">
-            <div class="settings-icon settings-icon-teal">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <!-- Data Section -->
+        <div class="settings-section">
+            <div class="settings-section-title">Data</div>
+            <div class="settings-group">
+                <div class="settings-item settings-item-action" onclick="exportData()">
+                    <div class="settings-item-left">
+                        <div class="settings-icon settings-icon-teal">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </div>
+                        <div>
+                            <div class="settings-text">Export Data</div>
+                            <div class="settings-subtext">Download all complaints data</div>
+                        </div>
+                    </div>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-dark)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="settings-item settings-item-action" onclick="clearAllData()">
+                    <div class="settings-item-left">
+                        <div class="settings-icon settings-icon-red">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        </div>
+                        <div>
+                            <div class="settings-text">Clear All Data</div>
+                            <div class="settings-subtext">Remove all complaints permanently</div>
+                        </div>
+                    </div>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-dark)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
             </div>
-            <div>
-              <div class="settings-text">Export Data</div>
-              <div class="settings-subtext">Download all complaints data</div>
-            </div>
-          </div>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-dark)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
         </div>
-        <div class="settings-item settings-item-action" onclick="clearAllData()">
-          <div class="settings-item-left">
-            <div class="settings-icon settings-icon-red">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-            </div>
-            <div>
-              <div class="settings-text">Clear All Data</div>
-              <div class="settings-subtext">Remove all complaints permanently</div>
-            </div>
-          </div>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-dark)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-        </div>
-      </div>
-    </div>
 
-    <!-- Telegram Section -->
-    <div class="settings-section">
-      <div class="settings-section-title">Telegram Bot</div>
-      <div class="settings-group">
-        <div class="settings-item" style="flex-direction:column;align-items:stretch;gap:12px;">
-          <div class="settings-item-left">
-            <div class="settings-icon settings-icon-blue">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <!-- About Section -->
+        <div class="settings-section">
+            <div class="settings-section-title">About</div>
+            <div class="settings-group">
+                <div class="settings-item">
+                    <div class="settings-item-left">
+                        <div class="settings-icon settings-icon-blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                        </div>
+                        <div>
+                            <div class="settings-text">Version</div>
+                            <div class="settings-subtext">Current app version</div>
+                        </div>
+                    </div>
+                    <span class="settings-value">1.0.0</span>
+                </div>
             </div>
-            <div>
-              <div class="settings-text">Telegram Configuration</div>
-              <div class="settings-subtext">Send complaint data to Telegram channel</div>
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div>
-              <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:4px;">Bot Token</label>
-              <input type="text" id="telegramBotToken" class="settings-input" placeholder="Enter your bot token" value="">
-            </div>
-            <div>
-              <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:4px;">Chat ID</label>
-              <input type="text" id="telegramChatId" class="settings-input" placeholder="Enter your chat ID" value="">
-            </div>
-            <div style="display:flex;gap:8px;">
-              <button class="btn btn-primary" onclick="saveTelegramConfig()" style="flex:1;">Save Config</button>
-              <button class="btn btn-secondary" onclick="testTelegram()" style="flex:1;">Test Send</button>
-            </div>
-          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- About Section -->
-    <div class="settings-section">
-      <div class="settings-section-title">About</div>
-      <div class="settings-group">
-        <div class="settings-item">
-          <div class="settings-item-left">
-            <div class="settings-icon settings-icon-blue">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <!-- Install App -->
+        <div class="settings-section">
+            <div class="settings-section-title">App</div>
+            <div class="settings-group">
+                <div class="settings-item settings-item-action" id="installAppBtn" onclick="installApp()" style="display:none">
+                    <div class="settings-item-left">
+                        <div class="settings-icon settings-icon-blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </div>
+                        <div>
+                            <div class="settings-text">Install App</div>
+                            <div class="settings-subtext">Add to home screen</div>
+                        </div>
+                    </div>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-dark)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
             </div>
-            <div>
-              <div class="settings-text">Version</div>
-              <div class="settings-subtext">Current app version</div>
-            </div>
-          </div>
-          <span class="settings-value">1.0.0</span>
         </div>
-        <div class="settings-item">
-          <div class="settings-item-left">
-            <div class="settings-icon settings-icon-orange">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            </div>
-            <div>
-              <div class="settings-text">Support</div>
-              <div class="settings-subtext">Get help or report issues</div>
-            </div>
-          </div>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-dark)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-        </div>
-        <div class="settings-item">
-          <div class="settings-item-left">
-            <div class="settings-icon settings-icon-green">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </div>
-            <div>
-              <div class="settings-text">Privacy Policy</div>
-              <div class="settings-subtext">View privacy terms</div>
-            </div>
-          </div>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-dark)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-        </div>
-      </div>
     </div>
 
-    <!-- Install App -->
-    <div class="settings-section">
-      <div class="settings-section-title">App</div>
-      <div class="settings-group">
-        <div class="settings-item settings-item-action" id="installAppBtn" onclick="installApp()" style="display:none">
-          <div class="settings-item-left">
-            <div class="settings-icon settings-icon-blue">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <!-- Confirm Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <span class="modal-title">Confirm Action</span>
+                <button class="modal-close" onclick="closeModal('confirmModal')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
             </div>
-            <div>
-              <div class="settings-text">Install App</div>
-              <div class="settings-subtext">Add to home screen</div>
-            </div>
-          </div>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-dark)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            <div class="modal-body" id="confirmBody"></div>
+            <div class="modal-footer" id="confirmFooter"></div>
         </div>
-      </div>
     </div>
 
-  </div>
+    <div class="toast" id="toast"></div>
 
-  <!-- Confirm Clear Data Modal -->
-  <div class="modal-overlay" id="confirmModal">
-    <div class="modal">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <span class="modal-title">Confirm Action</span>
-        <button class="modal-close" onclick="closeModal('confirmModal')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <div class="modal-body" id="confirmBody"></div>
-      <div class="modal-footer" id="confirmFooter"></div>
-    </div>
-  </div>
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>Home</span>
+        </a>
+        <a href="complaints.html" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <span>Complaints</span>
+        </a>
+        <a href="users.html" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            <span>Users</span>
+        </a>
+        <a href="settings.html" class="nav-item active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            <span>Settings</span>
+        </a>
+    </nav>
 
-  <!-- Toast -->
-  <div class="toast" id="toast"></div>
+    <script src="app.js"></script>
+    <script>
+        let dbRef = null;
 
-  <!-- Bottom Nav -->
-  <nav class="bottom-nav">
-    <a class="nav-item" href="./complaints.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2"/></svg>
-      <span>Home</span>
-    </a>
-    <a class="nav-item" href="./complaints.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-      <span>Complaints</span>
-    </a>
-    <a class="nav-item" href="./users.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      <span>Users</span>
-    </a>
-    <a class="nav-item active" href="./settings.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-      <span>Settings</span>
-    </a>
-  </nav>
-
-  <script src="./app.js"></script>
-  <script>
-    let dbRef = null;
-
-    document.addEventListener('DOMContentLoaded', () => {
-      loadSettings();
-      if (initFirebase()) {
-        dbRef = firebase.database().ref('adminSettings');
-        dbRef.on('value', snap => {
-          const val = snap.val() || {};
-          applySettings(val);
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            if (initFirebase()) {
+                dbRef = firebase.database().ref('adminSettings');
+                dbRef.on('value', function(snap) {
+                    var val = snap.val() || {};
+                    applySettings(val);
+                });
+            }
+            if (deferredPrompt) {
+                document.getElementById('installAppBtn').style.display = 'flex';
+            }
         });
-      }
-    });
 
-    function loadSettings() {
-      const saved = JSON.parse(localStorage.getItem('crickso_admin_settings') || '{}');
-      applySettings(saved);
-    }
-
-    function applySettings(val) {
-      if (val.notifications !== undefined) document.getElementById('notifToggle').checked = val.notifications;
-      if (val.autoApprove !== undefined) document.getElementById('autoApproveToggle').checked = val.autoApprove;
-      if (val.language) document.getElementById('languageSelect').value = val.language;
-      if (val.telegramBotToken) document.getElementById('telegramBotToken').value = val.telegramBotToken;
-      if (val.telegramChatId) document.getElementById('telegramChatId').value = val.telegramChatId;
-    }
-
-    function saveSetting(key, value) {
-      const settings = JSON.parse(localStorage.getItem('crickso_admin_settings') || '{}');
-      settings[key] = value;
-      localStorage.setItem('crickso_admin_settings', JSON.stringify(settings));
-      if (dbRef) {
-        dbRef.child(key).set(value);
-      }
-      showToast('Setting saved', 'success');
-    }
-
-    function exportData() {
-      showToast('Preparing export...', 'info');
-      getComplaintsFromFirebase().then(complaints => {
-        if (complaints.length === 0) {
-          showToast('No complaints to export', 'info');
-          return;
+        function loadSettings() {
+            var saved = JSON.parse(localStorage.getItem('crickso_admin_settings') || '{}');
+            applySettings(saved);
         }
-        const csv = 'ID,Name,Email,Phone,Subject,Status,Created\n' + complaints.map(c =>
-          [c.id, c.name||'', c.email||'', c.phone||'', c.subject||c.type||'', c.status||'', c.createdAt||''].map(f => '"' + String(f).replace(/"/g,'""') + '"').join(',')
-        ).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'crickso_complaints_' + new Date().toISOString().slice(0,10) + '.csv';
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('Export downloaded', 'success');
-      }).catch(() => {
-        showToast('Export failed', 'error');
-      });
-    }
 
-    function clearAllData() {
-      document.getElementById('confirmBody').innerHTML = '<div style="text-align:center;padding:10px 0">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" style="width:48px;height:48px;margin-bottom:12px"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>' +
-        '<h3 style="color:#fff;margin-bottom:8px">Delete All Complaints?</h3>' +
-        '<p style="color:var(--text-dim);font-size:13px">This action cannot be undone. All complaint data will be permanently removed from Firebase.</p></div>';
-      document.getElementById('confirmFooter').innerHTML = '<button class="btn btn-secondary" onclick="closeModal(\'confirmModal\')">Cancel</button>' +
-        '<button class="btn btn-reject" onclick="executeClearData()">Delete All</button>';
-      document.getElementById('confirmModal').classList.add('active');
-    }
-
-    async function executeClearData() {
-      try {
-        const complaints = await getComplaintsFromFirebase();
-        for (const c of complaints) {
-          await deleteComplaintFromFirebase(c.id);
+        function applySettings(val) {
+            if (val.notifications !== undefined) document.getElementById('notifToggle').checked = val.notifications;
+            if (val.autoApprove !== undefined) document.getElementById('autoApproveToggle').checked = val.autoApprove;
+            if (val.language) document.getElementById('languageSelect').value = val.language;
+            if (val.telegramBotToken) document.getElementById('telegramBotToken').value = val.telegramBotToken;
+            if (val.telegramChatId) document.getElementById('telegramChatId').value = val.telegramChatId;
         }
-        showToast('All complaints deleted', 'success');
-        closeModal('confirmModal');
-      } catch (e) {
-        showToast('Failed to clear data', 'error');
-      }
-    }
 
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('active');
-    }
+        function saveSetting(key, value) {
+            var settings = JSON.parse(localStorage.getItem('crickso_admin_settings') || '{}');
+            settings[key] = value;
+            localStorage.setItem('crickso_admin_settings', JSON.stringify(settings));
+            if (dbRef) {
+                dbRef.child(key).set(value);
+            }
+            showToast('Setting saved', 'success');
+        }
 
-    document.getElementById('confirmModal').addEventListener('click', function(e) {
-      if (e.target === this) closeModal('confirmModal');
-    });
+        function saveTelegramConfig() {
+            var token = document.getElementById('telegramBotToken').value.trim();
+            var chatId = document.getElementById('telegramChatId').value.trim();
+            if (!token || !chatId) {
+                showToast('Please fill both fields', 'error');
+                return;
+            }
+            saveSetting('telegramBotToken', token);
+            saveSetting('telegramChatId', chatId);
+            showToast('Telegram config saved', 'success');
+        }
 
-    function saveTelegramConfig() {
-      const token = document.getElementById('telegramBotToken').value.trim();
-      const chatId = document.getElementById('telegramChatId').value.trim();
-      if (!token || !chatId) {
-        showToast('Please fill both fields', 'error');
-        return;
-      }
-      saveSetting('telegramBotToken', token);
-      saveSetting('telegramChatId', chatId);
-      showToast('Telegram config saved', 'success');
-    }
+        function testTelegram() {
+            var token = document.getElementById('telegramBotToken').value.trim();
+            var chatId = document.getElementById('telegramChatId').value.trim();
+            if (!token || !chatId) {
+                showToast('Please save config first', 'error');
+                return;
+            }
+            var text = '*CrickSo Admin Test*\n\nThis is a test message from your admin panel.';
+            fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                if (data.ok) showToast('Test message sent!', 'success');
+                else showToast('Failed: ' + (data.description || 'Unknown error'), 'error');
+            }).catch(function() { showToast('Network error', 'error'); });
+        }
 
-    function testTelegram() {
-      const token = document.getElementById('telegramBotToken').value.trim();
-      const chatId = document.getElementById('telegramChatId').value.trim();
-      if (!token || !chatId) {
-        showToast('Please save config first', 'error');
-        return;
-      }
-      const text = '*Crickso Admin Test*\n\nThis is a test message from your admin panel.';
-      fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' })
-      }).then(r => r.json()).then(data => {
-        if (data.ok) showToast('Test message sent!', 'success');
-        else showToast('Failed: ' + (data.description || 'Unknown error'), 'error');
-      }).catch(() => showToast('Network error', 'error'));
-    }
+        function exportData() {
+            showToast('Preparing export...', 'info');
+            getComplaintsFromFirebase().then(function(complaints) {
+                if (complaints.length === 0) {
+                    showToast('No complaints to export', 'info');
+                    return;
+                }
+                var csv = 'ID,Name,Email,Phone,Type,Subject,Message,Status,Created\n' + complaints.map(function(c) {
+                    return [c.id, c.name||'', c.email||'', c.phone||'', c.type||'', c.subject||'', c.message||'', c.status||'', c.createdAt||''].map(function(f) { return '"' + String(f).replace(/"/g,'""') + '"'; }).join(',');
+                }).join('\n');
+                var blob = new Blob([csv], { type: 'text/csv' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'crickso_complaints_' + new Date().toISOString().slice(0,10) + '.csv';
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('Export downloaded', 'success');
+            }).catch(function() {
+                showToast('Export failed', 'error');
+            });
+        }
 
-    if (deferredPrompt) {
-      document.getElementById('installAppBtn').style.display = 'flex';
-    }
+        function clearAllData() {
+            document.getElementById('confirmBody').innerHTML = '<div style="text-align:center;padding:10px 0">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" style="width:48px;height:48px;margin-bottom:12px"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>' +
+                '<h3 style="color:#fff;margin-bottom:8px">Delete All Complaints?</h3>' +
+                '<p style="color:var(--text-dim);font-size:13px">This action cannot be undone.</p></div>';
+            document.getElementById('confirmFooter').innerHTML = '<button class="btn btn-secondary" onclick="closeModal(\'confirmModal\')">Cancel</button>' +
+                '<button class="btn btn-reject" onclick="executeClearData()">Delete All</button>';
+            document.getElementById('confirmModal').classList.add('active');
+        }
 
-    function installApp() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(choice => {
-          if (choice.outcome === 'accepted') {
-            showToast('App installing...', 'success');
-          }
-          deferredPrompt = null;
-          document.getElementById('installAppBtn').style.display = 'none';
+        function executeClearData() {
+            getComplaintsFromFirebase().then(function(complaints) {
+                var promises = complaints.map(function(c) {
+                    return deleteComplaintFromFirebase(c.id);
+                });
+                return Promise.all(promises);
+            }).then(function() {
+                showToast('All complaints deleted', 'success');
+                closeModal('confirmModal');
+            }).catch(function() {
+                showToast('Failed to clear data', 'error');
+            });
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        document.getElementById('confirmModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal('confirmModal');
         });
-      }
-    }
-  </script>
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function(choice) {
+                    if (choice.outcome === 'accepted') {
+                        showToast('App installing...', 'success');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installAppBtn').style.display = 'none';
+                });
+            }
+        }
+    </script>
 </body>
 </html>

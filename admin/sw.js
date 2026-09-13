@@ -1,40 +1,50 @@
-const CACHE_NAME = 'crickso-admin-v1';
-const ASSETS = [
-  './',
-  './complaints.html',
-  './users.html',
-  './settings.html',
-  './app.js',
-  './style.css',
-  './manifest.json'
+var CACHE_NAME = 'crickso-admin-v1';
+var urlsToCache = [
+    './',
+    './index.html',
+    './complaints.html',
+    './users.html',
+    './settings.html',
+    './style.css',
+    './app.js'
 ];
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
-  self.skipWaiting();
+self.addEventListener('install', function(event) {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(function(cache) {
+            return cache.addAll(urlsToCache);
+        })
+    );
+    self.skipWaiting();
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
+self.addEventListener('activate', function(event) {
+    event.waitUntil(
+        caches.keys().then(function(cacheNames) {
+            return Promise.all(
+                cacheNames.map(function(cacheName) {
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
+    );
+    self.clients.claim();
 });
 
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request).then(res => {
-      if (res.status !== 200 || res.type !== 'basic') return res;
-      const clone = res.clone();
-      caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-      return res;
-    })).catch(() => {
-      if (e.request.destination === 'document') {
-        return caches.match('./complaints.html');
-      }
-    })
-  );
+self.addEventListener('fetch', function(event) {
+    event.respondWith(
+        caches.match(event.request).then(function(response) {
+            if (response) return response;
+            return fetch(event.request).then(function(response) {
+                if (!response || response.status !== 200) return response;
+                var responseToCache = response.clone();
+                caches.open(CACHE_NAME).then(function(cache) {
+                    cache.put(event.request, responseToCache);
+                });
+                return response;
+            });
+        })
+    );
 });
