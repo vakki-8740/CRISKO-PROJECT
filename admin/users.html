@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0a1628">
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>CrickSo Admin - Users</title>
     <link rel="stylesheet" href="style.css">
@@ -39,23 +39,21 @@
 
     <div class="main">
         <div class="stats-bar">
-            <span class="stat-item"><strong id="totalUsers">0</strong> total users</span>
+            <span class="stat-item"><strong id="totalUsers">0</strong> users</span>
         </div>
         <div id="usersList"></div>
     </div>
 
-    <!-- User Detail Modal -->
     <div class="modal-overlay" id="userModal">
         <div class="modal">
             <div class="modal-handle"></div>
             <div class="modal-header">
-                <span class="modal-title" id="userModalTitle">User Details</span>
-                <button class="modal-close" onclick="closeModal('userModal')">
+                <span class="modal-title">User Details</span>
+                <button class="modal-close" onclick="closeModal()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
             </div>
             <div class="modal-body" id="userModalBody"></div>
-            <div class="modal-footer" id="userModalFooter"></div>
         </div>
     </div>
 
@@ -71,7 +69,7 @@
             <span>Complaints</span>
         </a>
         <a href="users.html" class="nav-item active">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
             <span>Users</span>
         </a>
         <a href="settings.html" class="nav-item">
@@ -82,36 +80,30 @@
 
     <script src="app.js"></script>
     <script>
-        let allUsers = [];
+        var allUsers = [];
+        var colors = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4'];
 
         document.addEventListener('DOMContentLoaded', function() {
             if (initFirebase()) {
-                loadUsers();
+                db.ref('users').on('value', function(snap) {
+                    var data = snap.val() || {};
+                    allUsers = Object.keys(data).map(function(k) {
+                        return Object.assign({}, data[k], { uid: k });
+                    });
+                    allUsers.sort(function(a, b) { return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); });
+                    filterUsers();
+                });
             }
         });
 
-        function loadUsers() {
-            db.ref('users').on('value', function(snap) {
-                const data = snap.val() || {};
-                allUsers = Object.keys(data).map(function(k) {
-                    return Object.assign({}, data[k], { uid: k });
-                });
-                allUsers.sort(function(a, b) {
-                    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-                });
-                filterUsers();
-            });
-        }
-
         function filterUsers() {
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            let filtered = allUsers;
+            var search = document.getElementById('searchInput').value.toLowerCase();
+            var filtered = allUsers;
             if (search) {
                 filtered = filtered.filter(function(u) {
                     return (u.name || '').toLowerCase().includes(search) ||
                            (u.email || '').toLowerCase().includes(search) ||
-                           (u.phone || '').toLowerCase().includes(search) ||
-                           (u.uid || '').toLowerCase().includes(search);
+                           (u.phone || '').toLowerCase().includes(search);
                 });
             }
             document.getElementById('totalUsers').textContent = filtered.length;
@@ -119,58 +111,42 @@
         }
 
         function renderUsers(users) {
-            const container = document.getElementById('usersList');
+            var container = document.getElementById('usersList');
             if (users.length === 0) {
                 container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>No users found</p></div>';
                 return;
             }
-            const colors = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16'];
-            let html = '';
+            var html = '';
             users.forEach(function(u, i) {
-                const initial = (u.name || u.email || 'U').charAt(0).toUpperCase();
-                const color = colors[i % colors.length];
-                html += '<div class="complaint-card" onclick="openUserDetail(\'' + u.uid + '\')">' +
-                    '<div class="card-header">' +
-                        '<div style="display:flex;align-items:center;gap:10px;">' +
-                            '<div class="user-avatar" style="background:' + color + '">' + initial + '</div>' +
-                            '<div>' +
-                                '<div class="card-name">' + (u.name || 'Unknown') + '</div>' +
-                                '<div class="card-subject">' + (u.email || 'No email') + '</div>' +
-                            '</div>' +
-                        '</div>' +
-                        '<button class="card-copy" onclick="event.stopPropagation();copyText(\'' + (u.phone || '') + '\')">' +
-                            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>' +
-                        '</button>' +
-                    '</div>' +
-                '</div>';
+                var initial = (u.name || u.email || 'U').charAt(0).toUpperCase();
+                var color = colors[i % colors.length];
+                html += '<div class="card" onclick="openUserDetail(\'' + u.uid + '\')">' +
+                    '<div class="card-header"><div style="display:flex;align-items:center;gap:10px;">' +
+                    '<div class="user-avatar" style="background:' + color + '">' + initial + '</div>' +
+                    '<div><div class="card-name">' + escapeHtml(u.name || 'Unknown') + '</div>' +
+                    '<div class="card-subject">' + escapeHtml(u.email || 'No email') + '</div></div></div></div></div>';
             });
             container.innerHTML = html;
         }
 
         function openUserDetail(uid) {
-            const user = allUsers.find(function(u) { return u.uid === uid; });
-            if (!user) return;
-
-            const date = user.createdAt ? new Date(user.createdAt).toLocaleString('en-IN') : 'N/A';
-
-            let html = '<div class="detail-row"><div class="detail-label">User ID</div><div class="detail-value" style="font-family:monospace;font-size:11px;">' + user.uid + '<button class="copy-btn" onclick="copyText(\'' + user.uid + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
-                '<div class="detail-row"><div class="detail-label">Name</div><div class="detail-value">' + (user.name || 'N/A') + '<button class="copy-btn" onclick="copyText(\'' + (user.name || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
-                '<div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">' + (user.email || 'N/A') + '<button class="copy-btn" onclick="copyText(\'' + (user.email || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
-                '<div class="detail-row"><div class="detail-label">Phone</div><div class="detail-value">' + (user.phone || 'N/A') + '<button class="copy-btn" onclick="copyText(\'' + (user.phone || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
-                '<div class="detail-row"><div class="detail-label">Joined</div><div class="detail-value">' + date + '</div></div>' +
-                '<div class="detail-row"><div class="detail-label">Full Data</div><div class="detail-value"><pre style="background:var(--navy-mid);padding:10px;border-radius:8px;font-size:11px;overflow-x:auto;white-space:pre-wrap;">' + JSON.stringify(user, null, 2) + '</pre><button class="copy-btn" onclick="copyText(JSON.stringify(allUsers.find(u=>u.uid===\'' + uid + '\'),null,2))" style="margin-top:6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy All Data</button></div></div>';
-
+            var u = allUsers.find(function(x) { return x.uid === uid; });
+            if (!u) return;
+            var html = '<div class="detail-row"><div class="detail-label">User ID</div><div class="detail-value" style="font-family:monospace;font-size:11px;">' + u.uid + '<button class="copy-btn" onclick="copyText(\'' + u.uid + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
+                '<div class="detail-row"><div class="detail-label">Name</div><div class="detail-value">' + (u.name || 'N/A') + '<button class="copy-btn" onclick="copyText(\'' + (u.name || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
+                '<div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">' + (u.email || 'N/A') + '<button class="copy-btn" onclick="copyText(\'' + (u.email || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
+                '<div class="detail-row"><div class="detail-label">Phone</div><div class="detail-value">' + (u.phone || 'N/A') + '<button class="copy-btn" onclick="copyText(\'' + (u.phone || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
+                '<div class="detail-row"><div class="detail-label">Full Data</div><div class="detail-value"><pre style="background:#f8fafc;padding:10px;border-radius:8px;font-size:11px;overflow-x:auto;white-space:pre-wrap;border:1px solid #e2e8f0;">' + JSON.stringify(u, null, 2) + '</pre><button class="copy-btn" onclick="copyText(JSON.stringify(allUsers.find(x=>x.uid===\'' + uid + '\'),null,2))" style="margin-top:6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy All</button></div></div>';
             document.getElementById('userModalBody').innerHTML = html;
-            document.getElementById('userModalFooter').innerHTML = '';
             document.getElementById('userModal').classList.add('active');
         }
 
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
+        function closeModal() {
+            document.getElementById('userModal').classList.remove('active');
         }
 
         document.getElementById('userModal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal('userModal');
+            if (e.target === this) closeModal();
         });
     </script>
 </body>

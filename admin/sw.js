@@ -1,50 +1,20 @@
-var CACHE_NAME = 'crickso-admin-v1';
-var urlsToCache = [
-    './',
-    './index.html',
-    './complaints.html',
-    './users.html',
-    './settings.html',
-    './style.css',
-    './app.js'
-];
+var CACHE_NAME = 'crickso-admin-v2';
+var urlsToCache = ['./', './index.html', './complaints.html', './users.html', './settings.html', './style.css', './app.js'];
 
-self.addEventListener('install', function(event) {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(function(cache) {
-            return cache.addAll(urlsToCache);
-        })
-    );
+self.addEventListener('install', function(e) {
+    e.waitUntil(caches.open(CACHE_NAME).then(function(c) { return c.addAll(urlsToCache); }));
     self.skipWaiting();
 });
 
-self.addEventListener('activate', function(event) {
-    event.waitUntil(
-        caches.keys().then(function(cacheNames) {
-            return Promise.all(
-                cacheNames.map(function(cacheName) {
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
-    );
+self.addEventListener('activate', function(e) {
+    e.waitUntil(caches.keys().then(function(names) {
+        return Promise.all(names.map(function(n) { if (n !== CACHE_NAME) return caches.delete(n); }));
+    }));
     self.clients.claim();
 });
 
-self.addEventListener('fetch', function(event) {
-    event.respondWith(
-        caches.match(event.request).then(function(response) {
-            if (response) return response;
-            return fetch(event.request).then(function(response) {
-                if (!response || response.status !== 200) return response;
-                var responseToCache = response.clone();
-                caches.open(CACHE_NAME).then(function(cache) {
-                    cache.put(event.request, responseToCache);
-                });
-                return response;
-            });
-        })
-    );
+self.addEventListener('fetch', function(e) {
+    e.respondWith(caches.match(e.request).then(function(r) {
+        return r || fetch(e.request);
+    }));
 });
