@@ -116,6 +116,38 @@
       </div>
     </div>
 
+    <!-- Telegram Section -->
+    <div class="settings-section">
+      <div class="settings-section-title">Telegram Bot</div>
+      <div class="settings-group">
+        <div class="settings-item" style="flex-direction:column;align-items:stretch;gap:12px;">
+          <div class="settings-item-left">
+            <div class="settings-icon settings-icon-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            </div>
+            <div>
+              <div class="settings-text">Telegram Configuration</div>
+              <div class="settings-subtext">Send complaint data to Telegram channel</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:4px;">Bot Token</label>
+              <input type="text" id="telegramBotToken" class="settings-input" placeholder="Enter your bot token" value="">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:4px;">Chat ID</label>
+              <input type="text" id="telegramChatId" class="settings-input" placeholder="Enter your chat ID" value="">
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-primary" onclick="saveTelegramConfig()" style="flex:1;">Save Config</button>
+              <button class="btn btn-secondary" onclick="testTelegram()" style="flex:1;">Test Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- About Section -->
     <div class="settings-section">
       <div class="settings-section-title">About</div>
@@ -242,6 +274,8 @@
       if (val.notifications !== undefined) document.getElementById('notifToggle').checked = val.notifications;
       if (val.autoApprove !== undefined) document.getElementById('autoApproveToggle').checked = val.autoApprove;
       if (val.language) document.getElementById('languageSelect').value = val.language;
+      if (val.telegramBotToken) document.getElementById('telegramBotToken').value = val.telegramBotToken;
+      if (val.telegramChatId) document.getElementById('telegramChatId').value = val.telegramChatId;
     }
 
     function saveSetting(key, value) {
@@ -307,6 +341,36 @@
     document.getElementById('confirmModal').addEventListener('click', function(e) {
       if (e.target === this) closeModal('confirmModal');
     });
+
+    function saveTelegramConfig() {
+      const token = document.getElementById('telegramBotToken').value.trim();
+      const chatId = document.getElementById('telegramChatId').value.trim();
+      if (!token || !chatId) {
+        showToast('Please fill both fields', 'error');
+        return;
+      }
+      saveSetting('telegramBotToken', token);
+      saveSetting('telegramChatId', chatId);
+      showToast('Telegram config saved', 'success');
+    }
+
+    function testTelegram() {
+      const token = document.getElementById('telegramBotToken').value.trim();
+      const chatId = document.getElementById('telegramChatId').value.trim();
+      if (!token || !chatId) {
+        showToast('Please save config first', 'error');
+        return;
+      }
+      const text = '*Crickso Admin Test*\n\nThis is a test message from your admin panel.';
+      fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' })
+      }).then(r => r.json()).then(data => {
+        if (data.ok) showToast('Test message sent!', 'success');
+        else showToast('Failed: ' + (data.description || 'Unknown error'), 'error');
+      }).catch(() => showToast('Network error', 'error'));
+    }
 
     if (deferredPrompt) {
       document.getElementById('installAppBtn').style.display = 'flex';

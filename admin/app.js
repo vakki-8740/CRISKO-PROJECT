@@ -162,3 +162,65 @@ window.addEventListener('appinstalled', () => {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
+
+// Telegram Integration
+function getTelegramConfig() {
+  const saved = JSON.parse(localStorage.getItem('crickso_admin_settings') || '{}');
+  return {
+    botToken: saved.telegramBotToken || '',
+    chatId: saved.telegramChatId || ''
+  };
+}
+
+function sendToTelegram(text, imageDataUrl) {
+  const config = getTelegramConfig();
+  if (!config.botToken || !config.chatId) return Promise.resolve({ ok: false, skip: true });
+  
+  if (imageDataUrl) {
+    const blob = dataURLtoBlob(imageDataUrl);
+    const formData = new FormData();
+    formData.append('chat_id', config.chatId);
+    formData.append('caption', text);
+    formData.append('parse_mode', 'Markdown');
+    formData.append('photo', blob, 'image.jpg');
+    return fetch('https://api.telegram.org/bot' + config.botToken + '/sendPhoto', {
+      method: 'POST',
+      body: formData
+    }).then(r => r.json());
+  }
+  
+  return fetch('https://api.telegram.org/bot' + config.botToken + '/sendMessage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: config.chatId, text: text, parse_mode: 'Markdown' })
+  }).then(r => r.json());
+}
+
+function sendComplaintToTelegram(complaint) {
+  const config = getTelegramConfig();
+  if (!config.botToken || !config.chatId) return;
+  
+  const type = complaint.type || 'General';
+  const text = '*New Complaint*\n\n' +
+    '*Name:* ' + (complaint.name || 'N/A') + '\n' +
+    '*Email:* ' + (complaint.email || 'N/A') + '\n' +
+    '*Phone:* ' + (complaint.phone || 'N/A') + '\n' +
+    '*Type:* ' + type + '\n' +
+    '*Subject:* ' + (complaint.subject || complaint.message || 'N/A') + '\n' +
+    '*Date:* ' + (complaint.createdAt ? new Date(complaint.createdAt).toLocaleString() : new Date().toLocaleString());
+  
+  if (complaint.image) {
+    sendToTelegram(text, complaint.image);
+  } else {
+    sendToTelegram(text);
+  }
+}
+
+function dataURLtoBlob(dataURL) {
+  const parts = dataURL.split(',');
+  const mime = parts[0].match(/:(.*?);/)[1];
+  const b64 = atob(parts[1]);
+  const u8 = new Uint8Array(b64.length);
+  for (let i = 0; i < b64.length; i++) u8[i] = b64.charCodeAt(i);
+  return new Blob([u8], { type: mime });
+}
