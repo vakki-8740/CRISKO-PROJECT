@@ -409,15 +409,25 @@
             }
 
             let html = '';
-            complaints.reverse().forEach(function(c) {
-                html += '<div class="complaint-item">';
-                html += '<div class="complaint-type">' + c.type + '</div>';
+            const reversed = complaints.slice().reverse();
+            reversed.forEach(function(c, i) {
+                const typeColors = {
+                    'Deposit Complaint': '#2563eb',
+                    'Withdrawal Complaint': '#f59e0b',
+                    'Email Verification': '#10b981',
+                    'Online Chat': '#8b5cf6'
+                };
+                const color = typeColors[c.type] || '#2563eb';
+                html += '<div class="complaint-item" style="border-left:4px solid ' + color + '">';
+                html += '<div class="complaint-type" style="color:' + color + '">' + c.type + '</div>';
                 html += '<div class="complaint-detail"><span>Name:</span> ' + c.name + '</div>';
                 html += '<div class="complaint-detail"><span>Mobile:</span> ' + c.mobile + '</div>';
                 html += '<div class="complaint-detail"><span>Email:</span> ' + c.email + '</div>';
-                html += '<div class="complaint-detail"><span>Amount:</span> ' + c.amount + '</div>';
+                if (c.amount && c.amount !== '-') {
+                    html += '<div class="complaint-detail"><span>Amount:</span> ' + c.amount + '</div>';
+                }
                 html += '<div class="complaint-detail"><span>Date:</span> ' + c.date + '</div>';
-                html += '<div class="complaint-status">Under Preview</div>';
+                html += '<div class="complaint-status">' + (c.status === 'pending' ? 'Under Preview' : c.status) + '</div>';
                 html += '</div>';
             });
 

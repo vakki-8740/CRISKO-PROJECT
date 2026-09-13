@@ -330,6 +330,11 @@
             complaint.id = newRef.key;
             newRef.set(complaint);
 
+            // Save to localStorage for mailbox
+            const localComplaints = JSON.parse(localStorage.getItem('cricksoComplaints') || '[]');
+            localComplaints.push(complaint);
+            localStorage.setItem('cricksoComplaints', JSON.stringify(localComplaints));
+
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span> Submitting...';
