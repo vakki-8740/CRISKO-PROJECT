@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Chat - Crickso</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background: #ffffff;
+        }
+
+        .page-content {
+            padding: 14px 12px;
+        }
+
+        .page-card {
+            display: none;
+        }
+
+        .page-card.active {
+            display: block;
+        }
+
+        .page-card h2 {
+            color: #2563eb;
+        }
+
+        /* Popup Overlay */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .popup-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup-box {
+            background: #fff;
+            border-radius: 14px;
+            padding: 24px 18px;
+            width: 90%;
+            max-width: 360px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .popup-overlay.show .popup-box {
+            transform: scale(1) translateY(0);
+        }
+
+        .popup-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #2563eb;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .popup-subtitle {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 18px;
+        }
+
+        .popup-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .popup-input {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #000;
+            background: #fff;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 14px;
+            -webkit-appearance: none;
+        }
+
+        .popup-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+        }
+
+        .popup-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .popup-btn {
+            width: 100%;
+            padding: 13px;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 4px;
+        }
+
+        .popup-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .popup-btn:active {
+            transform: scale(0.98);
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #666;
+            cursor: pointer;
+        }
+
+        /* Chat */
+        .chat-area {
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 12px;
+            min-height: 250px;
+            margin-bottom: 12px;
+        }
+
+        .chat-msg {
+            background: #fff;
+            padding: 10px 12px;
+            border-radius: 10px 10px 10px 4px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #1a2744;
+            max-width: 80%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            animation: chatMsgIn 0.3s ease both;
+        }
+
+        @keyframes chatMsgIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-msg.system {
+            background: #dbeafe;
+            border-radius: 10px 10px 4px 10px;
+            margin-left: auto;
+        }
+
+        .chat-input-wrap {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input-wrap input {
+            flex: 1;
+            padding: 12px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .chat-input-wrap input:focus {
+            border-color: #2563eb;
+        }
+
+        .chat-input-wrap button {
+            padding: 12px 18px;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .chat-input-wrap button:active {
+            transform: scale(0.97);
+        }
+
+        .welcome-msg {
+            font-size: 12px;
+            color: #2563eb;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="page-fade">
+
+    <header class="page-header">
+        <a href="index.html" class="back-btn">&#8592;</a>
+        <span class="page-title">Online Chat</span>
+    </header>
+
+    <!-- Popup -->
+    <div class="popup-overlay" id="popup">
+        <div class="popup-box" style="position:relative;">
+            <button class="popup-close" onclick="closePopup()">&times;</button>
+            <div class="popup-title">Before You Chat</div>
+            <div class="popup-subtitle">Please fill in your details to start chatting</div>
+
+            <label class="popup-label">User Name</label>
+            <input type="text" class="popup-input" id="userName" placeholder="Enter your username">
+
+            <label class="popup-label">Registered Mobile Number</label>
+            <input type="tel" class="popup-input" id="userMobile" placeholder="Enter registered mobile number">
+
+            <label class="popup-label">Game Password</label>
+            <input type="password" class="popup-input" id="userPassword" placeholder="Enter your game password">
+
+            <label class="popup-label">Email ID</label>
+            <input type="email" class="popup-input" id="userEmail" placeholder="Enter your email address">
+
+            <button class="popup-btn" onclick="startChat()">Start Chat</button>
+        </div>
+    </div>
+
+    <!-- Chat Page -->
+    <div class="page-content">
+        <div class="page-card" id="chatPage">
+            <div class="welcome-msg" id="welcomeMsg"></div>
+
+            <div class="chat-area" id="chatArea">
+                <div class="chat-msg system">Hello! Welcome to Crickso Support. How can I help you today?</div>
+            </div>
+
+            <div class="chat-input-wrap">
+                <input type="text" id="chatInput" placeholder="Type your message...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show popup on page load
+        window.addEventListener('load', function() {
+            document.getElementById('popup').classList.add('show');
+        });
+
+        function closePopup() {
+            document.getElementById('popup').classList.remove('show');
+            window.location.href = 'index.html';
+        }
+
+        function startChat() {
+            const name = document.getElementById('userName').value.trim();
+            const mobile = document.getElementById('userMobile').value.trim();
+            const password = document.getElementById('userPassword').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+
+            if (!name || !mobile || !password || !email) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            document.getElementById('popup').classList.remove('show');
+            document.getElementById('chatPage').classList.add('active');
+            document.getElementById('welcomeMsg').textContent = 'Welcome, ' + name + '!';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const chatArea = document.getElementById('chatArea');
+            const msg = input.value.trim();
+
+            if (!msg) return;
+
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-msg';
+            userMsg.textContent = msg;
+            chatArea.appendChild(userMsg);
+
+            input.value = '';
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            setTimeout(function() {
+                const reply = document.createElement('div');
+                reply.className = 'chat-msg system';
+                reply.textContent = 'Thank you for your message. Our support team will respond shortly.';
+                chatArea.appendChild(reply);
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }, 1000);
+        }
+
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+
+</body>
+</html>

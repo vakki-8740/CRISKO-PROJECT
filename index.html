@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crickso - Help Center</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Side Menu */
+        .menu-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .menu-btn span {
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: var(--navy);
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: -260px;
+            width: 260px;
+            height: 100%;
+            background: #fff;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            z-index: 200;
+            transition: left 0.3s ease;
+        }
+
+        .side-menu.open {
+            left: 0;
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 199;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .menu-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .menu-header {
+            padding: 20px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-header img {
+            width: 40px;
+            height: 28px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .menu-header span {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .menu-close {
+            position: absolute;
+            top: 18px;
+            right: 14px;
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .menu-links {
+            padding: 10px 0;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            text-decoration: none;
+            color: var(--navy);
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .menu-link:active {
+            background: var(--soft-blue);
+        }
+
+        .menu-link svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Mailbox Section */
+        .mailbox-section {
+            display: none;
+            padding: 14px 12px 24px;
+        }
+
+        .mailbox-section.active {
+            display: block;
+        }
+
+        .home-section {
+            display: block;
+        }
+
+        .home-section.hidden {
+            display: none;
+        }
+
+        .mailbox-header {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 14px;
+        }
+
+        .complaint-item {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .complaint-type {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 6px;
+        }
+
+        .complaint-detail {
+            font-size: 12px;
+            color: #475569;
+            margin-bottom: 3px;
+            line-height: 1.4;
+        }
+
+        .complaint-detail span {
+            font-weight: 600;
+            color: #1a2744;
+        }
+
+        .complaint-status {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #d4a574;
+            color: #fff;
+        }
+
+        .no-complaints {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .no-complaints svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 10px;
+            opacity: 0.4;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Splash Screen -->
+    <div class="splash" id="splash">
+        <div class="splash-content">
+            <img src="LOGO/photo_2026-09-13_16-32-37.jpg" alt="Logo" class="splash-logo">
+            <div class="splash-text">Crickso</div>
+            <div class="splash-sub">Help Center</div>
+        </div>
+    </div>
+
+    <!-- Side Menu Overlay -->
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+
+    <!-- Side Menu -->
+    <div class="side-menu" id="sideMenu">
+        <button class="menu-close" onclick="closeMenu()">&times;</button>
+        <div class="menu-header">
+            <img src="LOGO/photo_2026-09-13_16-32-37.jpg" alt="Logo">
+            <span>Crickso</span>
+        </div>
+        <div class="menu-links">
+            <a class="menu-link" onclick="showHome()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Home
+            </a>
+            <a class="menu-link" onclick="showMailbox()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                Mailbox
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+
+        <header class="header">
+            <button class="menu-btn" onclick="openMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <img src="LOGO/photo_2026-09-13_16-32-37.jpg" alt="Logo" class="logo">
+            <span class="header-help">Help Center</span>
+        </header>
+
+        <!-- Home Section -->
+        <div class="home-section" id="homeSection">
+
+            <section class="banner">
+                <img src="BANNER/photo_2026-09-13_16-32-31.jpg" alt="Crickso Banner">
+            </section>
+
+            <p class="section-title">How can we help you?</p>
+
+            <div class="cards-list">
+
+                <a href="deposit-problem.html" class="card">
+                    <img src="ICONS/DEPOSITE-PROBLEM.jpg" alt="Deposit Problem" class="card-icon">
+                    <span class="card-label">Deposit Problem</span>
+                    <svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+
+                <a href="withdrawal-problem.html" class="card">
+                    <img src="ICONS/WITHDRAL-PROBLEM.jpg" alt="Withdrawal Problem" class="card-icon">
+                    <span class="card-label">Withdrawal Problem</span>
+                    <svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+
+                <a href="email-verification.html" class="card">
+                    <img src="ICONS/E-MAIL-VERIFITION.jpg" alt="Email Verification" class="card-icon">
+                    <span class="card-label">Email Verification</span>
+                    <svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+
+                <a href="online-chat.html" class="card">
+                    <img src="ICONS/ONLLINE-CHAT.jpg" alt="Online Chat" class="card-icon">
+                    <span class="card-label">Online Chat</span>
+                    <svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+
+            </div>
+
+            <section class="faq-section">
+                <h3 class="faq-heading">Frequently Asked Questions</h3>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>How long does deposit take?</span>
+                        <span class="faq-arrow">&#9662;</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Deposits usually reflect within 5-10 minutes. If your deposit is pending for more than 30 minutes, please submit a complaint.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>How to reset my password?</span>
+                        <span class="faq-arrow">&#9662;</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Go to Email Verification section and enter your registered email. You will receive a reset link within minutes.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>Withdrawal pending for long?</span>
+                        <span class="faq-arrow">&#9662;</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Withdrawals are processed within 24 hours. If your withdrawal is stuck, please raise a complaint with your transaction details.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>How to contact support?</span>
+                        <span class="faq-arrow">&#9662;</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>You can use the Online Chat feature or email us at support@crickso.com. Our team responds within 1-2 hours.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="hours-section">
+                <svg class="hours-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <div class="hours-text">
+                    <span class="hours-title">Working Hours</span>
+                    <span class="hours-time">24/7 - All Days Open</span>
+                </div>
+            </section>
+
+            <footer class="footer">
+                <div class="footer-logo">
+                    <img src="LOGO/photo_2026-09-13_16-32-37.jpg" alt="Logo" class="footer-logo-img">
+                    <span class="footer-brand">Help Center</span>
+                </div>
+                <div class="footer-links">
+                    <a href="index.html">Home</a>
+                    <a href="deposit-problem.html">Deposit</a>
+                    <a href="withdrawal-problem.html">Withdrawal</a>
+                    <a href="online-chat.html">Chat</a>
+                </div>
+                <div class="footer-copy">&copy; 2020 Crickso. All rights reserved.</div>
+            </footer>
+
+        </div>
+
+        <!-- Mailbox Section -->
+        <div class="mailbox-section" id="mailboxSection">
+            <div class="mailbox-header">My Complaints</div>
+            <div id="complaintsList"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // Splash Screen
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('splash').classList.add('hide');
+                document.getElementById('mainContent').classList.add('show');
+
+                // Check if mailbox should open
+                var params = new URLSearchParams(window.location.search);
+                if (params.get('open') === 'mailbox') {
+                    showMailbox();
+                }
+            }, 1800);
+        });
+
+        // Side Menu
+        function openMenu() {
+            document.getElementById('sideMenu').classList.add('open');
+            document.getElementById('menuOverlay').classList.add('show');
+        }
+
+        function closeMenu() {
+            document.getElementById('sideMenu').classList.remove('open');
+            document.getElementById('menuOverlay').classList.remove('show');
+        }
+
+        // Show Home
+        function showHome() {
+            document.getElementById('homeSection').classList.remove('hidden');
+            document.getElementById('mailboxSection').classList.remove('active');
+            closeMenu();
+        }
+
+        // Show Mailbox
+        function showMailbox() {
+            document.getElementById('homeSection').classList.add('hidden');
+            document.getElementById('mailboxSection').classList.add('active');
+            loadComplaints();
+            closeMenu();
+        }
+
+        // Load Complaints from localStorage
+        function loadComplaints() {
+            const complaints = JSON.parse(localStorage.getItem('cricksoComplaints') || '[]');
+            const list = document.getElementById('complaintsList');
+
+            if (complaints.length === 0) {
+                list.innerHTML = '<div class="no-complaints"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg><br>No complaints submitted yet.</div>';
+                return;
+            }
+
+            let html = '';
+            complaints.reverse().forEach(function(c) {
+                html += '<div class="complaint-item">';
+                html += '<div class="complaint-type">' + c.type + '</div>';
+                html += '<div class="complaint-detail"><span>Name:</span> ' + c.name + '</div>';
+                html += '<div class="complaint-detail"><span>Mobile:</span> ' + c.mobile + '</div>';
+                html += '<div class="complaint-detail"><span>Email:</span> ' + c.email + '</div>';
+                html += '<div class="complaint-detail"><span>Amount:</span> ' + c.amount + '</div>';
+                html += '<div class="complaint-detail"><span>Date:</span> ' + c.date + '</div>';
+                html += '<div class="complaint-status">Under Preview</div>';
+                html += '</div>';
+            });
+
+            list.innerHTML = html;
+        }
+
+        // Save Complaint
+        function saveComplaint(data) {
+            const complaints = JSON.parse(localStorage.getItem('cricksoComplaints') || '[]');
+            complaints.push(data);
+            localStorage.setItem('cricksoComplaints', JSON.stringify(complaints));
+        }
+
+        // FAQ Toggle
+        function toggleFaq(el) {
+            const item = el.parentElement;
+            const allItems = document.querySelectorAll('.faq-item');
+            allItems.forEach(function(faq) {
+                if (faq !== item) faq.classList.remove('active');
+            });
+            item.classList.toggle('active');
+        }
+    </script>
+
+</body>
+</html>

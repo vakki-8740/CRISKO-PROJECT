@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#0a1628">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>CrickSo Admin - Users</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="manifest" href="./manifest.json">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="header-top">
+      <div class="logo">
+        <svg viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="8" fill="#2563eb"/>
+          <path d="M8 16c0-4.418 3.582-8 8-8s8 3.582 8 8-3.582 8-8 8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="16" cy="16" r="3" fill="#fff"/>
+        </svg>
+        <div>
+          <div class="logo-text">CrickSo Admin</div>
+          <div class="logo-sub">User Management</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="header-btn" onclick="refreshUsers()" title="Refresh">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h5"/><path d="M20 20v-5h-5"/><path d="M20.49 9A9 9 0 005.64 5.64L4 4m16 16l-1.64-1.64A9 9 0 014.51 15"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Search users..." oninput="filterUsers()">
+    </div>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat-card"><div class="stat-num" id="statTotalUsers">0</div><div class="stat-label">Total</div></div>
+    <div class="stat-card"><div class="stat-num" id="statActiveUsers" style="color:var(--green)">0</div><div class="stat-label">Active</div></div>
+    <div class="stat-card"><div class="stat-num" id="statBannedUsers" style="color:var(--red)">0</div><div class="stat-label">Banned</div></div>
+    <div class="stat-card"><div class="stat-num" id="statNewUsers" style="color:var(--blue-light)">0</div><div class="stat-label">Today</div></div>
+  </div>
+
+  <div class="main" id="usersList">
+    <div class="loading-spinner"><div class="spinner"></div></div>
+  </div>
+
+  <!-- User Detail Modal -->
+  <div class="modal-overlay" id="userModal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title">User Details</span>
+        <button class="modal-close" onclick="closeModal('userModal')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="userDetailBody"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="userCopyAllBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy All
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a class="nav-item" href="./complaints.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2"/></svg>
+      <span>Home</span>
+    </a>
+    <a class="nav-item" href="./complaints.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+      <span>Complaints</span>
+    </a>
+    <a class="nav-item active" href="./users.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>Users</span>
+    </a>
+    <a class="nav-item" href="./settings.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <script src="./app.js"></script>
+  <script>
+    const avatarColors = ['avatar-blue','avatar-green','avatar-purple','avatar-orange','avatar-pink','avatar-teal'];
+    let allUsers = [];
+
+    function getAvatarColor(uid) {
+      let hash = 0;
+      for (let i = 0; i < (uid || '').length; i++) hash = ((hash << 5) - hash) + uid.charCodeAt(i);
+      return avatarColors[Math.abs(hash) % avatarColors.length];
+    }
+
+    function getInitials(name) {
+      if (!name) return '?';
+      const parts = name.trim().split(/\s+/);
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+      return name.substring(0, 2).toUpperCase();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!initFirebase()) {
+        showToast('Firebase init failed', 'error');
+        return;
+      }
+      loadUsers();
+    });
+
+    function loadUsers() {
+      getUsersFromFirebase().then(users => {
+        allUsers = users;
+        updateStats();
+        renderUsers();
+      }).catch(() => {
+        showToast('Failed to load users', 'error');
+        document.getElementById('usersList').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><h3>Error loading users</h3><p>Please try again later.</p></div>';
+      });
+    }
+
+    function refreshUsers() {
+      showToast('Refreshing...', 'info');
+      loadUsers();
+    }
+
+    function updateStats() {
+      const total = allUsers.length;
+      const active = allUsers.filter(u => !u.banned && u.status !== 'banned').length;
+      const banned = allUsers.filter(u => u.banned || u.status === 'banned').length;
+      const today = allUsers.filter(u => {
+        if (!u.createdAt && !u.joinedAt) return false;
+        const d = new Date(u.createdAt || u.joinedAt);
+        const now = new Date();
+        return d.toDateString() === now.toDateString();
+      }).length;
+      document.getElementById('statTotalUsers').textContent = total;
+      document.getElementById('statActiveUsers').textContent = active;
+      document.getElementById('statBannedUsers').textContent = banned;
+      document.getElementById('statNewUsers').textContent = today;
+    }
+
+    function filterUsers() {
+      renderUsers();
+    }
+
+    function renderUsers() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      let filtered = allUsers;
+      if (query) {
+        filtered = filtered.filter(u =>
+          (u.name || '').toLowerCase().includes(query) ||
+          (u.email || '').toLowerCase().includes(query) ||
+          (u.phone || '').toLowerCase().includes(query) ||
+          (u.username || '').toLowerCase().includes(query) ||
+          (u.uid || '').toLowerCase().includes(query)
+        );
+      }
+      const container = document.getElementById('usersList');
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg><h3>No users found</h3><p>There are no users matching your search.</p></div>';
+        return;
+      }
+      container.innerHTML = filtered.map(u => {
+        const color = getAvatarColor(u.uid);
+        const initials = getInitials(u.name);
+        const date = (u.createdAt || u.joinedAt) ? new Date(u.createdAt || u.joinedAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '';
+        return '<div class="user-card" onclick="openUserDetail(\'' + (u.uid || '') + '\')">' +
+          '<div class="user-avatar ' + color + '">' + initials + '</div>' +
+          '<div class="user-info">' +
+            '<div class="user-name">' + escapeHtml(u.name || 'Unknown') + '</div>' +
+            '<div class="user-email">' + escapeHtml(u.email || u.phone || 'No contact info') + '</div>' +
+            '<div class="user-meta">Joined ' + date + '</div>' +
+          '</div>' +
+          '<div class="user-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function openUserDetail(uid) {
+      const u = allUsers.find(x => x.uid === uid);
+      if (!u) return;
+      let html = '';
+      html += '<div class="modal-section"><div class="modal-label">User ID</div><div class="modal-value modal-value-header"><span id="userDetailUid">' + escapeHtml(u.uid || '') + '</span><button class="modal-copy-btn" onclick="copyText(\'' + escapeAttr(u.uid || '') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy ID</button></div></div>';
+      html += '<div class="modal-section"><div class="modal-label">Name</div><div class="modal-value modal-value-header"><span id="userDetailName">' + escapeHtml(u.name || 'Unknown') + '</span><button class="modal-copy-btn" onclick="copyField(\'userDetailName\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button></div></div>';
+      if (u.email) html += '<div class="modal-section"><div class="modal-label">Email</div><div class="modal-value modal-value-header"><span id="userDetailEmail">' + escapeHtml(u.email) + '</span><button class="modal-copy-btn" onclick="copyField(\'userDetailEmail\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button></div></div>';
+      if (u.phone) html += '<div class="modal-section"><div class="modal-label">Phone</div><div class="modal-value modal-value-header"><span id="userDetailPhone">' + escapeHtml(u.phone) + '</span><button class="modal-copy-btn" onclick="copyField(\'userDetailPhone\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</button></div></div>';
+      if (u.username) html += '<div class="modal-section"><div class="modal-label">Username</div><div class="modal-value">' + escapeHtml(u.username) + '</div></div>';
+      if (u.role) html += '<div class="modal-section"><div class="modal-label">Role</div><div class="modal-value">' + escapeHtml(u.role) + '</div></div>';
+      const status = u.banned ? 'Banned' : (u.status || 'Active');
+      const statusColor = u.status === 'banned' || u.banned ? 'var(--red)' : 'var(--green)';
+      html += '<div class="modal-section"><div class="modal-label">Status</div><div class="modal-value" style="color:' + statusColor + '">' + status + '</div></div>';
+      if (u.createdAt || u.joinedAt) html += '<div class="modal-section"><div class="modal-label">Joined</div><div class="modal-value">' + formatDate(u.createdAt || u.joinedAt) + '</div></div>';
+      if (u.lastLogin || u.lastSeen) html += '<div class="modal-section"><div class="modal-label">Last Active</div><div class="modal-value">' + formatDate(u.lastLogin || u.lastSeen) + '</div></div>';
+      document.getElementById('userDetailBody').innerHTML = html;
+      document.getElementById('userCopyAllBtn').onclick = function() {
+        copyText(JSON.stringify(u, null, 2));
+      };
+      document.getElementById('userModal').classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    document.getElementById('userModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal('userModal');
+    });
+  </script>
+</body>
+</html>

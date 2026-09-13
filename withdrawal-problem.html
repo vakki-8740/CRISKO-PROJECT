@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Withdrawal Complaint - Crickso</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        body {
+            background: #ffffff;
+        }
+
+        .page-content {
+            padding: 14px 12px;
+        }
+
+        .complaint-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 20px 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .complaint-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2563eb;
+            text-align: center;
+            margin-bottom: 3px;
+        }
+
+        .complaint-subtitle {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .field-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .field-input {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #000;
+            background: #fff;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 14px;
+            -webkit-appearance: none;
+        }
+
+        .field-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+        }
+
+        .field-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .select-wrapper {
+            position: relative;
+            margin-bottom: 14px;
+        }
+
+        .field-select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #000;
+            background: #fff;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .field-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+        }
+
+        .select-arrow {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #666;
+            font-size: 11px;
+        }
+
+        .file-upload {
+            width: 100%;
+            padding: 16px;
+            border: 2px dashed #d1d5db;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            margin-bottom: 14px;
+            background: #fafafa;
+        }
+
+        .file-upload:hover {
+            border-color: #2563eb;
+            background: #f0f5ff;
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .file-upload-text {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .file-upload-text span {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 13px;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 4px;
+        }
+
+        .submit-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        .preview-img {
+            max-width: 100%;
+            max-height: 120px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* Popup */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .popup-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup-box {
+            background: #fff;
+            border-radius: 14px;
+            padding: 28px 20px;
+            width: 85%;
+            max-width: 320px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .popup-overlay.show .popup-box {
+            transform: scale(1);
+        }
+
+        .success-icon {
+            width: 56px;
+            height: 56px;
+            background: #22c55e;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin: 0 auto 14px;
+        }
+
+        .success-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #22c55e;
+            margin-bottom: 6px;
+        }
+
+        .success-text {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="page-fade">
+
+    <header class="page-header">
+        <a href="index.html" class="back-btn">&#8592;</a>
+        <span class="page-title">Withdrawal Complaint</span>
+    </header>
+
+    <div class="page-content">
+        <div class="complaint-card">
+
+            <div class="complaint-title">Withdrawal Complaint</div>
+            <div class="complaint-subtitle">Fill in your details below to submit a complaint</div>
+
+            <label class="field-label">User Name</label>
+            <input type="text" class="field-input" placeholder="Enter your username">
+
+            <label class="field-label">Registered Mobile Number</label>
+            <input type="tel" class="field-input" placeholder="Enter registered mobile number">
+
+            <label class="field-label">Game Password</label>
+            <input type="password" class="field-input" placeholder="Enter your game password">
+
+            <label class="field-label">Email ID</label>
+            <input type="email" class="field-input" placeholder="Enter your email address">
+
+            <label class="field-label">Type of Problem</label>
+            <div class="select-wrapper">
+                <select class="field-select">
+                    <option value="" disabled selected>Select problem type</option>
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="reject">Reject</option>
+                    <option value="received-bank">Received in Bank Account</option>
+                </select>
+                <span class="select-arrow">&#9662;</span>
+            </div>
+
+            <label class="field-label">Enter Withdrawal Amount</label>
+            <input type="number" class="field-input" placeholder="Enter amount">
+
+            <label class="field-label">Upload Withdrawal Issue Image</label>
+            <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" accept="image/*" onchange="previewFile()">
+                <div class="file-upload-text" id="uploadText">
+                    <span>Click to upload</span> or drag and drop<br>PNG, JPG up to 5MB
+                </div>
+                <img id="previewImg" class="preview-img">
+            </div>
+
+            <button class="submit-btn" id="submitBtn" onclick="submitComplaint()">Complaint Submit</button>
+
+        </div>
+    </div>
+
+    <!-- Success Popup -->
+    <div class="popup-overlay" id="successPopup">
+        <div class="popup-box">
+            <div class="success-icon">&#10004;</div>
+            <div class="success-title">Complaint Submit Successfully</div>
+            <div class="success-text">Your problem will be fixed within 30 minutes. Our team is working on it.</div>
+            <button class="submit-btn" onclick="closeSuccess()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Init
+        firebase.initializeApp({
+            apiKey: "AIzaSyDmRdzAUm-OsTTrxRW4f585VZ2Wq5CAs3w",
+            authDomain: "yusub-bhai-croor-bet.firebaseapp.com",
+            databaseURL: "https://yusub-bhai-croor-bet-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "yusub-bhai-croor-bet",
+            storageBucket: "yusub-bhai-croor-bet.firebasestorage.app",
+            messagingSenderId: "998570774789",
+            appId: "1:998570774789:web:18c14c5c447af3121ba76c"
+        });
+        const db = firebase.database();
+
+        function previewFile() {
+            const file = document.getElementById('fileInput').files[0];
+            const preview = document.getElementById('previewImg');
+            const text = document.getElementById('uploadText');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    text.innerHTML = file.name;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function submitComplaint() {
+            const fields = document.querySelectorAll('.field-input, .field-select');
+            let empty = false;
+
+            fields.forEach(input => {
+                if (!input.value || input.value === '') {
+                    empty = true;
+                }
+            });
+
+            if (empty) {
+                alert('Please fill in all fields before submitting.');
+                return;
+            }
+
+            const allInputs = document.querySelectorAll('.field-input');
+            const complaint = {
+                type: 'Withdrawal Complaint',
+                name: allInputs[0].value,
+                mobile: allInputs[1].value,
+                email: allInputs[3].value,
+                amount: allInputs[4].value,
+                date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
+                status: 'pending'
+            };
+
+            const newRef = db.ref('complaints').push();
+            complaint.id = newRef.key;
+            newRef.set(complaint);
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Submitting...';
+
+            setTimeout(function() {
+                btn.disabled = false;
+                btn.innerHTML = 'Complaint Submit';
+                document.getElementById('successPopup').classList.add('show');
+            }, 3000);
+        }
+
+        function closeSuccess() {
+            document.getElementById('successPopup').classList.remove('show');
+            window.location.href = 'index.html?open=mailbox';
+        }
+    </script>
+
+</body>
+</html>
