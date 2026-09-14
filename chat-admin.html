@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Admin Panel - Crickso</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --navy: #1a2744;
+            --white: #ffffff;
+            --off-white: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-400: #94a3b8;
+            --gray-600: #475569;
+            --green: #22c55e;
+            --red: #ef4444;
+            --radius: 14px;
+            --radius-sm: 10px;
+            --shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--off-white); color: var(--navy); height: 100vh; overflow: hidden; }
+
+        /* ============ HEADER ============ */
+        .admin-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100;
+        }
+        .admin-title { font-size: 17px; font-weight: 700; color: var(--white); }
+        .admin-badge { background: rgba(255,255,255,0.2); color: var(--white); font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+        .online-count { font-size: 11px; color: rgba(255,255,255,0.8); display: flex; align-items: center; gap: 5px; }
+        .online-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* ============ LAYOUT ============ */
+        .admin-layout { display: flex; height: calc(100vh - 52px); }
+
+        /* ============ USER LIST ============ */
+        .user-list-panel {
+            width: 320px; background: var(--white); border-right: 1px solid var(--gray-200);
+            display: flex; flex-direction: column; animation: slideIn 0.5s ease both;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+        .search-box { padding: 12px; border-bottom: 1px solid var(--gray-200); }
+        .search-input {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm);
+            font-size: 13px; outline: none; transition: all 0.3s ease;
+        }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+        .user-list { flex: 1; overflow-y: auto; }
+        .user-item {
+            padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+            border-bottom: 1px solid var(--gray-100); cursor: pointer; transition: all 0.3s ease;
+            animation: fadeIn 0.5s ease both;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .user-item:hover { background: var(--off-white); }
+        .user-item.active { background: #dbeafe; border-left: 3px solid var(--primary); }
+
+        .user-avatar {
+            width: 42px; height: 42px; border-radius: 12px; background: var(--primary);
+            color: var(--white); display: flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: 700; flex-shrink: 0;
+        }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-size: 13px; font-weight: 700; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-last-msg { font-size: 11px; color: var(--gray-400); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .user-time { font-size: 10px; color: var(--gray-400); flex-shrink: 0; }
+        .unread-badge {
+            background: var(--primary); color: var(--white); font-size: 10px; font-weight: 700;
+            width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0;
+        }
+
+        .no-users { text-align: center; padding: 40px 20px; color: var(--gray-400); }
+        .no-users svg { width: 48px; height: 48px; margin-bottom: 10px; opacity: 0.3; }
+        .no-users p { font-size: 13px; }
+
+        /* ============ CHAT PANEL ============ */
+        .chat-panel { flex: 1; display: flex; flex-direction: column; background: var(--gray-100); }
+
+        .chat-header {
+            background: var(--white); padding: 12px 16px; display: flex; align-items: center;
+            gap: 12px; border-bottom: 1px solid var(--gray-200); animation: slideIn 0.5s ease both;
+        }
+        .chat-user-avatar {
+            width: 38px; height: 38px; border-radius: 10px; background: var(--primary);
+            color: var(--white); display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700;
+        }
+        .chat-user-details { flex: 1; }
+        .chat-user-name { font-size: 14px; font-weight: 700; color: var(--navy); }
+        .chat-user-meta { font-size: 11px; color: var(--gray-400); }
+        .chat-close-btn {
+            background: var(--gray-100); border: none; width: 32px; height: 32px; border-radius: 8px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .chat-close-btn:hover { background: var(--gray-200); }
+        .chat-close-btn svg { width: 16px; height: 16px; color: var(--gray-600); }
+
+        /* Messages */
+        .admin-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .msg { display: flex; flex-direction: column; max-width: 70%; animation: msgIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+        @keyframes msgIn { from { opacity: 0; transform: translateY(15px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        .msg.user { align-self: flex-start; }
+        .msg.admin { align-self: flex-end; }
+
+        .msg-bubble {
+            padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.4;
+            word-wrap: break-word; transition: all 0.3s ease;
+        }
+        .msg.user .msg-bubble { background: var(--white); color: var(--navy); border-bottom-left-radius: 4px; box-shadow: var(--shadow); }
+        .msg.admin .msg-bubble { background: var(--primary); color: var(--white); border-bottom-right-radius: 4px; }
+
+        .msg-image { max-width: 200px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
+        .msg-image:hover { transform: scale(1.02); }
+
+        .msg-file {
+            display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.05);
+            padding: 8px 12px; border-radius: 8px; cursor: pointer;
+        }
+        .msg.user .msg-file { background: var(--gray-100); }
+        .msg-file-icon { width: 28px; height: 28px; background: var(--primary); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+        .msg-file-icon svg { width: 14px; height: 14px; color: var(--white); }
+
+        .msg-time { font-size: 10px; color: var(--gray-400); margin-top: 3px; padding: 0 4px; }
+        .msg.admin .msg-time { text-align: right; }
+
+        .msg-reply {
+            background: rgba(0,0,0,0.05); border-left: 3px solid var(--primary); padding: 5px 8px;
+            border-radius: 4px; margin-bottom: 5px; font-size: 11px; color: var(--gray-600);
+        }
+
+        .msg-actions { display: flex; gap: 4px; margin-top: 3px; }
+        .msg-action-btn {
+            background: var(--white); border: 1px solid var(--gray-200); border-radius: 5px; padding: 3px 6px;
+            cursor: pointer; display: flex; align-items: center; gap: 3px;
+            font-size: 9px; color: var(--gray-600); transition: all 0.3s ease;
+        }
+        .msg-action-btn:hover { background: var(--gray-100); border-color: var(--primary); color: var(--primary); }
+        .msg-action-btn svg { width: 10px; height: 10px; }
+
+        .typing-indicator { display: none; align-self: flex-start; padding: 10px 16px; }
+        .typing-indicator.show { display: flex; }
+        .typing-dots { display: flex; gap: 4px; }
+        .typing-dot {
+            width: 6px; height: 6px; background: var(--gray-400); border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+
+        /* Input Area */
+        .admin-input-area {
+            background: var(--white); padding: 12px; display: flex; align-items: center; gap: 8px;
+            border-top: 1px solid var(--gray-200); animation: slideUp 0.5s ease both;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .admin-input {
+            flex: 1; padding: 10px 14px; border: 1px solid var(--gray-200); border-radius: 20px;
+            font-size: 13px; outline: none; transition: all 0.3s ease;
+        }
+        .admin-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+        .admin-send-btn {
+            background: var(--primary); border: none; width: 38px; height: 38px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); flex-shrink: 0;
+        }
+        .admin-send-btn:active { transform: scale(0.85); }
+        .admin-send-btn.sending { animation: sendBounce 0.8s cubic-bezier(0.34,1.56,0.64,1); }
+        @keyframes sendBounce {
+            0% { transform: scale(1); } 30% { transform: scale(0.7) rotate(-10deg); }
+            60% { transform: scale(1.2) rotate(5deg); } 100% { transform: scale(1) rotate(0); }
+        }
+        .admin-send-btn svg { width: 16px; height: 16px; color: var(--white); }
+
+        /* Empty State */
+        .empty-chat {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--gray-400); animation: fadeIn 0.5s ease both;
+        }
+        .empty-chat svg { width: 64px; height: 64px; margin-bottom: 12px; opacity: 0.3; }
+        .empty-chat p { font-size: 14px; }
+
+        /* Reply Preview */
+        .reply-preview {
+            display: none; background: var(--gray-100); padding: 8px 12px; border-left: 3px solid var(--primary);
+            border-radius: 6px; margin: 0 12px 8px; animation: slideUp 0.3s ease both;
+        }
+        .reply-preview.show { display: flex; align-items: center; justify-content: space-between; }
+        .reply-preview-text { font-size: 12px; color: var(--gray-600); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .reply-preview-close { background: none; border: none; cursor: pointer; padding: 4px; color: var(--gray-400); }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: var(--navy); color: var(--white); padding: 10px 20px; border-radius: 8px;
+            font-size: 12px; font-weight: 600; opacity: 0; transition: all 0.3s ease; z-index: 200;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* Send Animation */
+        .send-anim {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 50px; height: 50px; background: var(--primary); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; z-index: 300; transition: all 0.8s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .send-anim.show { opacity: 1; visibility: visible; animation: sendFly 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        @keyframes sendFly {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            40% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+            70% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+        }
+        .send-anim svg { width: 20px; height: 20px; color: var(--white); }
+
+        /* Image Modal */
+        .image-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center;
+            z-index: 500; opacity: 0; visibility: hidden; transition: all 0.3s ease;
+        }
+        .image-modal.show { opacity: 1; visibility: visible; }
+        .image-modal img { max-width: 90%; max-height: 80%; border-radius: 8px; }
+        .image-modal-close {
+            position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2);
+            border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .image-modal-close svg { width: 20px; height: 20px; color: #fff; }
+
+        /* Responsive */
+        @media screen and (max-width: 768px) {
+            .user-list-panel { width: 100%; }
+            .chat-panel { display: none; }
+            .chat-panel.active { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="admin-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <div class="admin-title">Chat Admin Panel</div>
+            <div class="admin-badge">CRICKSO</div>
+        </div>
+        <div class="online-count">
+            <span class="online-dot"></span>
+            <span id="onlineCount">0 Online</span>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+        <!-- User List -->
+        <div class="user-list-panel">
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="Search users..." id="searchInput" oninput="filterUsers()">
+            </div>
+            <div class="user-list" id="userList">
+                <div class="no-users" id="noUsers">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <p>No active chats</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Panel -->
+        <div class="chat-panel" id="chatPanel">
+            <div class="empty-chat" id="emptyChat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <p>Select a user to start chatting</p>
+            </div>
+
+            <div id="activeChatView" style="display:none;flex-direction:column;height:100%;">
+                <div class="chat-header">
+                    <div class="chat-user-avatar" id="chatAvatar">U</div>
+                    <div class="chat-user-details">
+                        <div class="chat-user-name" id="chatUserName">User</div>
+                        <div class="chat-user-meta" id="chatUserMeta">Mobile: -</div>
+                    </div>
+                    <button class="chat-close-btn" onclick="closeChat()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+
+                <div class="admin-messages" id="adminMessages">
+                    <div class="typing-indicator" id="adminTyping">
+                        <div class="typing-dots">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reply-preview" id="adminReplyPreview">
+                    <div class="reply-preview-text" id="adminReplyText"></div>
+                    <button class="reply-preview-close" onclick="cancelAdminReply()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+
+                <div class="admin-input-area">
+                    <input type="text" class="admin-input" id="adminInput" placeholder="Type a message...">
+                    <button class="admin-send-btn" id="adminSendBtn" onclick="sendAdminMessage()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="image-modal" id="imageModal" onclick="closeImageModal()">
+        <button class="image-modal-close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        <img id="modalImage" src="">
+    </div>
+
+    <!-- Send Animation -->
+    <div class="send-anim" id="sendAnim">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ============ FIREBASE ============
+        firebase.initializeApp({
+            apiKey: "AIzaSyDmRdzAUm-OsTTrxRW4f585VZ2Wq5CAs3w",
+            authDomain: "yusub-bhai-croor-bet.firebaseapp.com",
+            databaseURL: "https://yusub-bhai-croor-bet-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "yusub-bhai-croor-bet",
+            storageBucket: "yusub-bhai-croor-bet.firebasestorage.app",
+            messagingSenderId: "998570774789",
+            appId: "1:998570774789:web:18c14c5c447af3121ba76c"
+        });
+        const db = firebase.database();
+
+        let activeChatId = null;
+        let adminReplyTo = null;
+        let users = {};
+
+        // ============ LOAD USERS ============
+        db.ref('chats').orderByChild('createdAt').on('value', function(snap) {
+            users = {};
+            const list = document.getElementById('userList');
+            const noUsers = document.getElementById('noUsers');
+            list.innerHTML = '';
+            let onlineCount = 0;
+
+            snap.forEach(function(child) {
+                const chat = child.val();
+                const id = child.key;
+                users[id] = chat;
+
+                if (chat.status === 'active') onlineCount++;
+
+                const item = document.createElement('div');
+                item.className = 'user-item' + (activeChatId === id ? ' active' : '');
+                item.id = 'user_' + id;
+                item.style.animationDelay = (Object.keys(users).length * 0.05) + 's';
+                item.onclick = function() { openChat(id); };
+
+                const initial = chat.user ? chat.user.name.charAt(0).toUpperCase() : 'U';
+                const name = chat.user ? chat.user.name : 'Unknown';
+                const lastMsg = chat.lastMessage || 'No messages yet';
+                const time = chat.lastTime ? new Date(chat.lastTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+
+                item.innerHTML = '<div class="user-avatar">' + initial + '</div>' +
+                    '<div class="user-info"><div class="user-name">' + name + '</div><div class="user-last-msg">' + lastMsg + '</div></div>' +
+                    '<div class="user-time">' + time + '</div>';
+
+                list.appendChild(item);
+            });
+
+            document.getElementById('onlineCount').textContent = onlineCount + ' Online';
+            if (Object.keys(users).length === 0) {
+                list.innerHTML = '<div class="no-users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><p>No active chats</p></div>';
+            }
+        });
+
+        // ============ OPEN CHAT ============
+        function openChat(chatId) {
+            activeChatId = chatId;
+            const chat = users[chatId];
+
+            document.getElementById('emptyChat').style.display = 'none';
+            document.getElementById('activeChatView').style.display = 'flex';
+
+            if (chat.user) {
+                document.getElementById('chatAvatar').textContent = chat.user.name.charAt(0).toUpperCase();
+                document.getElementById('chatUserName').textContent = chat.user.name;
+                document.getElementById('chatUserMeta').textContent = 'Mobile: ' + chat.user.mobile + ' | Email: ' + chat.user.email;
+            }
+
+            document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
+            const userEl = document.getElementById('user_' + chatId);
+            if (userEl) userEl.classList.add('active');
+
+            loadMessages(chatId);
+        }
+
+        // ============ LOAD MESSAGES ============
+        function loadMessages(chatId) {
+            const container = document.getElementById('adminMessages');
+            container.innerHTML = '<div class="typing-indicator" id="adminTyping"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
+
+            db.ref('chats/' + chatId + '/messages').orderByChild('timestamp').off();
+
+            db.ref('chats/' + chatId + '/messages').orderByChild('timestamp').on('child_added', function(snap) {
+                const msg = snap.val();
+                msg.id = snap.key;
+                appendAdminMessage(msg);
+            });
+        }
+
+        function appendAdminMessage(msg) {
+            const container = document.getElementById('adminMessages');
+            const typing = document.getElementById('adminTyping');
+            const isUser = msg.sender === 'user';
+            const wrapper = document.createElement('div');
+            wrapper.className = 'msg ' + (isUser ? 'user' : 'admin');
+            wrapper.id = 'adminMsg_' + msg.id;
+
+            let content = '';
+
+            if (msg.replyTo) {
+                content += '<div class="msg-reply">Reply to: ' + truncate(msg.replyToText, 40) + '</div>';
+            }
+
+            if (msg.type === 'image') {
+                content += '<img class="msg-image" src="' + msg.imageUrl + '" onclick="openImageModal(\'' + msg.imageUrl + '\')">';
+            } else if (msg.type === 'file') {
+                content += '<div class="msg-file"><div class="msg-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div><div><div style="font-size:12px;font-weight:600;">' + msg.fileName + '</div><div style="font-size:10px;color:#94a3b8;">' + msg.fileSize + '</div></div></div>';
+            } else {
+                content += '<div class="msg-text">' + (msg.text || '') + '</div>';
+            }
+
+            if (msg.edited) content += ' <span style="font-size:9px;opacity:0.6;">(edited)</span>';
+
+            const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+
+            let actions = '';
+            if (isUser) {
+                actions = '<div class="msg-actions">' +
+                    '<button class="msg-action-btn" onclick="adminReply(\'' + msg.id + '\', \'' + escapeAttr(msg.text || 'Image') + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg>Reply</button>' +
+                    '</div>';
+            }
+
+            wrapper.innerHTML = '<div class="msg-bubble">' + content + '</div><div class="msg-time">' + time + '</div>' + actions;
+            container.insertBefore(wrapper, typing);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ============ SEND MESSAGE ============
+        function sendAdminMessage() {
+            const input = document.getElementById('adminInput');
+            const text = input.value.trim();
+            if (!text || !activeChatId) return;
+
+            showSendAnim();
+
+            const msgData = {
+                sender: 'admin',
+                text: text,
+                type: 'text',
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            if (adminReplyTo) {
+                msgData.replyTo = adminReplyTo;
+                msgData.replyToText = document.getElementById('adminReplyText').textContent;
+                cancelAdminReply();
+            }
+
+            db.ref('chats/' + activeChatId + '/messages').push(msgData);
+            db.ref('chats/' + activeChatId).update({ lastMessage: text, lastTime: firebase.database.ServerValue.TIMESTAMP });
+
+            input.value = '';
+        }
+
+        // ============ REPLY ============
+        function adminReply(id, text) {
+            adminReplyTo = id;
+            document.getElementById('adminReplyText').textContent = text;
+            document.getElementById('adminReplyPreview').classList.add('show');
+            document.getElementById('adminInput').focus();
+        }
+
+        function cancelAdminReply() {
+            adminReplyTo = null;
+            document.getElementById('adminReplyPreview').classList.remove('show');
+        }
+
+        // ============ CLOSE CHAT ============
+        function closeChat() {
+            activeChatId = null;
+            document.getElementById('emptyChat').style.display = 'flex';
+            document.getElementById('activeChatView').style.display = 'none';
+            document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
+        }
+
+        // ============ SEARCH ============
+        function filterUsers() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('.user-item').forEach(item => {
+                const name = item.querySelector('.user-name').textContent.toLowerCase();
+                item.style.display = name.includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        // ============ HELPERS ============
+        function showSendAnim() {
+            const anim = document.getElementById('sendAnim');
+            anim.classList.add('show');
+            setTimeout(() => anim.classList.remove('show'), 800);
+        }
+
+        function openImageModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').classList.add('show');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('show');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function truncate(str, len) {
+            return str && str.length > len ? str.substring(0, len) + '...' : str;
+        }
+
+        function escapeAttr(str) {
+            return str ? str.replace(/'/g, "\\'").replace(/"/g, '&quot;') : '';
+        }
+
+        document.getElementById('adminInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendAdminMessage();
+        });
+    </script>
+</body>
+</html>

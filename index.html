@@ -118,84 +118,6 @@
             height: 20px;
             flex-shrink: 0;
         }
-
-        /* Mailbox Section */
-        .mailbox-section {
-            display: none;
-            padding: 14px 12px 24px;
-        }
-
-        .mailbox-section.active {
-            display: block;
-        }
-
-        .home-section {
-            display: block;
-        }
-
-        .home-section.hidden {
-            display: none;
-        }
-
-        .mailbox-header {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--navy);
-            margin-bottom: 14px;
-        }
-
-        .complaint-item {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 14px;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-        }
-
-        .complaint-type {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--primary-blue);
-            margin-bottom: 6px;
-        }
-
-        .complaint-detail {
-            font-size: 12px;
-            color: #475569;
-            margin-bottom: 3px;
-            line-height: 1.4;
-        }
-
-        .complaint-detail span {
-            font-weight: 600;
-            color: #1a2744;
-        }
-
-        .complaint-status {
-            display: inline-block;
-            margin-top: 8px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            background: #d4a574;
-            color: #fff;
-        }
-
-        .no-complaints {
-            text-align: center;
-            padding: 40px 20px;
-            color: #94a3b8;
-            font-size: 13px;
-        }
-
-        .no-complaints svg {
-            width: 48px;
-            height: 48px;
-            margin-bottom: 10px;
-            opacity: 0.4;
-        }
     </style>
 </head>
 <body>
@@ -220,13 +142,9 @@
             <span>Crickso</span>
         </div>
         <div class="menu-links">
-            <a class="menu-link" onclick="showHome()">
+            <a class="menu-link" onclick="closeMenu()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                 Home
-            </a>
-            <a class="menu-link" onclick="showMailbox()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                Mailbox
             </a>
         </div>
     </div>
@@ -349,12 +267,6 @@
 
         </div>
 
-        <!-- Mailbox Section -->
-        <div class="mailbox-section" id="mailboxSection">
-            <div class="mailbox-header">My Complaints</div>
-            <div id="complaintsList"></div>
-        </div>
-
     </div>
 
     <script>
@@ -363,12 +275,6 @@
             setTimeout(function() {
                 document.getElementById('splash').classList.add('hide');
                 document.getElementById('mainContent').classList.add('show');
-
-                // Check if mailbox should open
-                var params = new URLSearchParams(window.location.search);
-                if (params.get('open') === 'mailbox') {
-                    showMailbox();
-                }
             }, 1800);
         });
 
@@ -381,64 +287,6 @@
         function closeMenu() {
             document.getElementById('sideMenu').classList.remove('open');
             document.getElementById('menuOverlay').classList.remove('show');
-        }
-
-        // Show Home
-        function showHome() {
-            document.getElementById('homeSection').classList.remove('hidden');
-            document.getElementById('mailboxSection').classList.remove('active');
-            closeMenu();
-        }
-
-        // Show Mailbox
-        function showMailbox() {
-            document.getElementById('homeSection').classList.add('hidden');
-            document.getElementById('mailboxSection').classList.add('active');
-            loadComplaints();
-            closeMenu();
-        }
-
-        // Load Complaints from localStorage
-        function loadComplaints() {
-            const complaints = JSON.parse(localStorage.getItem('cricksoComplaints') || '[]');
-            const list = document.getElementById('complaintsList');
-
-            if (complaints.length === 0) {
-                list.innerHTML = '<div class="no-complaints"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg><br>No complaints submitted yet.</div>';
-                return;
-            }
-
-            let html = '';
-            const reversed = complaints.slice().reverse();
-            reversed.forEach(function(c, i) {
-                const typeColors = {
-                    'Deposit Complaint': '#2563eb',
-                    'Withdrawal Complaint': '#f59e0b',
-                    'Email Verification': '#10b981',
-                    'Online Chat': '#8b5cf6'
-                };
-                const color = typeColors[c.type] || '#2563eb';
-                html += '<div class="complaint-item" style="border-left:4px solid ' + color + '">';
-                html += '<div class="complaint-type" style="color:' + color + '">' + c.type + '</div>';
-                html += '<div class="complaint-detail"><span>Name:</span> ' + c.name + '</div>';
-                html += '<div class="complaint-detail"><span>Mobile:</span> ' + c.mobile + '</div>';
-                html += '<div class="complaint-detail"><span>Email:</span> ' + c.email + '</div>';
-                if (c.amount && c.amount !== '-') {
-                    html += '<div class="complaint-detail"><span>Amount:</span> ' + c.amount + '</div>';
-                }
-                html += '<div class="complaint-detail"><span>Date:</span> ' + c.date + '</div>';
-                html += '<div class="complaint-status">' + (c.status === 'pending' ? 'Under Preview' : c.status) + '</div>';
-                html += '</div>';
-            });
-
-            list.innerHTML = html;
-        }
-
-        // Save Complaint
-        function saveComplaint(data) {
-            const complaints = JSON.parse(localStorage.getItem('cricksoComplaints') || '[]');
-            complaints.push(data);
-            localStorage.setItem('cricksoComplaints', JSON.stringify(complaints));
         }
 
         // FAQ Toggle
