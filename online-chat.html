@@ -419,6 +419,18 @@
 
             listenMessages();
             simulateOnlineStatus();
+
+            // Welcome Message
+            setTimeout(function() {
+                const welcomeMsg = '👋 Hello! Welcome to CRICKSO Support Team. 🏏🤝\n\nThank you for contacting us. Please share your issue with us, and our Support Team will assist you as soon as possible.\n\nThank you for choosing CRICKSO! ❤️';
+                db.ref('chats/' + chatId + '/messages').push({
+                    sender: 'admin',
+                    text: welcomeMsg,
+                    type: 'text',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+                db.ref('chats/' + chatId).update({ lastMessage: welcomeMsg.substring(0, 50) + '...', lastTime: firebase.database.ServerValue.TIMESTAMP });
+            }, 1000);
         }
 
         // ============ MESSAGES ============
