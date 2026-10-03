@@ -143,22 +143,6 @@
         .msg-action-btn svg { width: 12px; height: 12px; }
         .msg-action-btn.delete:hover { border-color: #ef4444; color: #ef4444; }
 
-        /* Typing Indicator */
-        .typing-indicator { display: none; align-self: flex-start; padding: 10px 16px; }
-        .typing-indicator.show { display: flex; }
-        .typing-dots { display: flex; gap: 4px; }
-        .typing-dot {
-            width: 7px; height: 7px; background: #94a3b8; border-radius: 50%;
-            animation: typingBounce 1.4s infinite ease-in-out;
-        }
-        .typing-dot:nth-child(1) { animation-delay: 0s; }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typingBounce {
-            0%,60%,100% { transform: translateY(0); }
-            30% { transform: translateY(-6px); }
-        }
-
         /* Input Area */
         .chat-input-area {
             background: #fff; padding: 10px 12px; display: flex; align-items: flex-end; gap: 8px;
@@ -370,15 +354,7 @@
             </div>
         </header>
 
-        <div class="chat-messages" id="chatMessages">
-            <div class="typing-indicator" id="typingIndicator">
-                <div class="typing-dots">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                </div>
-            </div>
-        </div>
+        <div class="chat-messages" id="chatMessages"></div>
 
         <div class="chat-input-area">
             <div class="reply-preview" id="replyPreview">
@@ -568,7 +544,6 @@
 
         function appendMessage(msg) {
             const container = document.getElementById('chatMessages');
-            const typing = document.getElementById('typingIndicator');
             const isUser = msg.sender === 'user';
             const wrapper = document.createElement('div');
             wrapper.className = 'msg-wrapper ' + (isUser ? 'user' : 'admin');
@@ -602,7 +577,7 @@
             }
 
             wrapper.innerHTML = '<div class="msg-bubble">' + content + '</div><div class="msg-time">' + time + '</div>' + actions;
-            container.insertBefore(wrapper, typing);
+            container.appendChild(wrapper);
             scrollToBottom();
         }
 
@@ -654,24 +629,6 @@
             db.ref('chats/' + chatId).update({ lastMessage: text, lastTime: firebase.database.ServerValue.TIMESTAMP });
 
             input.value = '';
-
-            setTimeout(() => {
-                showTyping();
-                setTimeout(() => {
-                    hideTyping();
-                    const replies = [
-                        'Thank you for your message. Our team will respond shortly.',
-                        'Got it! We are looking into this.',
-                        'Thanks for reaching out. Please wait while we assist you.',
-                        'Your message has been received. Support team will reply soon.'
-                    ];
-                    const reply = replies[Math.floor(Math.random() * replies.length)];
-                    db.ref('chats/' + chatId + '/messages').push({
-                        sender: 'admin', text: reply, type: 'text',
-                        timestamp: firebase.database.ServerValue.TIMESTAMP
-                    });
-                }, 800);
-            }, 1000);
         }
 
         // ============ SEND IMAGE ============
@@ -783,15 +740,6 @@
             const anim = document.getElementById('sendAnimation');
             anim.classList.add('show');
             setTimeout(() => anim.classList.remove('show'), 800);
-        }
-
-        function showTyping() {
-            document.getElementById('typingIndicator').classList.add('show');
-            scrollToBottom();
-        }
-
-        function hideTyping() {
-            document.getElementById('typingIndicator').classList.remove('show');
         }
 
         function simulateOnlineStatus() {
