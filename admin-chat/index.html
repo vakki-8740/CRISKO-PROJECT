@@ -6,7 +6,13 @@
     <meta name="theme-color" content="#2563eb">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Crickso Admin">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="Crickso live chat admin panel">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/icon-32.png">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
     <title>Chat Admin Panel - Crickso</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -369,6 +375,35 @@
         }
         .send-anim svg { width: 22px; height: 22px; color: var(--white); }
 
+        /* ============ INSTALL ============ */
+        .install-btn {
+            background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+            color: var(--white); font-size: 11px; font-weight: 700; font-family: inherit;
+            padding: 8px 12px; border-radius: 20px; cursor: pointer; flex-shrink: 0;
+            display: none; align-items: center; gap: 5px; white-space: nowrap;
+        }
+        .install-btn.show { display: inline-flex; }
+        .install-btn:active { transform: scale(0.94); }
+        .install-btn svg { width: 14px; height: 14px; }
+
+        .install-hint {
+            position: fixed; left: 10px; right: 10px;
+            bottom: calc(var(--safe-bottom) + 10px);
+            background: var(--navy); color: var(--white); z-index: 550;
+            border-radius: 14px; padding: 12px 14px; display: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            animation: slideUp 0.3s ease both;
+        }
+        .install-hint.show { display: block; }
+        .install-hint-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+        .install-hint-text { font-size: 12px; color: rgba(255,255,255,0.85); line-height: 1.5; }
+        .install-hint-text b { color: var(--white); }
+        .install-hint-close {
+            position: absolute; top: 8px; right: 8px; background: none; border: none;
+            padding: 6px; cursor: pointer;
+        }
+        .install-hint-close svg { width: 14px; height: 14px; color: rgba(255,255,255,0.7); }
+
         /* ============ TABLET / DESKTOP (progressive enhancement) ============ */
         @media (min-width: 820px) {
             .app { display: flex; }
@@ -395,6 +430,10 @@
                     <span id="onlineCount">0 Online</span>
                 </div>
             </div>
+            <button class="install-btn" id="installBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Install</span>
+            </button>
         </header>
 
         <div class="search-box">
@@ -474,6 +513,15 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<!-- Install hint (iOS / desktop) -->
+<div class="install-hint" id="installHint">
+    <button class="install-hint-close" id="installHintClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+    <div class="install-hint-title">Install Crickso Admin</div>
+    <div class="install-hint-text" id="installHintText"></div>
+</div>
+
 <script>
     // ============ FIREBASE ============
     firebase.initializeApp({
@@ -495,7 +543,9 @@
         avatar: $('chatAvatar'), name: $('chatUserName'), meta: $('chatUserMeta'), statusDot: $('chatStatusDot'),
         search: $('searchInput'), searchClear: $('searchClear'), replyPreview: $('replyPreview'),
         replyText: $('replyText'), onlineCount: $('onlineCount'), onlineDot: $('onlineDot'),
-        imageModal: $('imageModal'), modalImage: $('modalImage'), toast: $('toast'), sendAnim: $('sendAnim')
+        imageModal: $('imageModal'), modalImage: $('modalImage'), toast: $('toast'), sendAnim: $('sendAnim'),
+        installBtn: $('installBtn'), installHint: $('installHint'),
+        installHintText: $('installHintText'), installHintClose: $('installHintClose')
     };
 
     let users = {};
@@ -960,6 +1010,62 @@
             else if (replyTo) cancelReply();
         }
     });
+
+    // ============ PWA INSTALL ============
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    let deferredPrompt = null;
+
+    if (!isStandalone && isIOS) {
+        els.installHintText.innerHTML = 'Tap the <b>Share</b> button in Safari, then choose <b>Add to Home Screen</b> to install this panel like an app.';
+        els.installHint.classList.add('show');
+    }
+
+    els.installHintClose.addEventListener('click', function() {
+        els.installHint.classList.remove('show');
+    });
+
+    window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        els.installBtn.classList.add('show');
+        els.installHint.classList.remove('show');
+    });
+
+    els.installBtn.addEventListener('click', function() {
+        if (!deferredPrompt) {
+            els.installHintText.innerHTML = 'Open your browser menu and choose <b>Install app</b> / <b>Add to Home screen</b>.';
+            els.installHint.classList.add('show');
+            return;
+        }
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function() {
+            deferredPrompt = null;
+            els.installBtn.classList.remove('show');
+        });
+    });
+
+    window.addEventListener('appinstalled', function() {
+        deferredPrompt = null;
+        els.installBtn.classList.remove('show');
+        els.installHint.classList.remove('show');
+        showToast('App installed');
+    });
+
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('./sw.js').catch(function() { });
+        });
+    }
+
+    // deep link from the manifest shortcut
+    const params = new URLSearchParams(location.search);
+    if (params.get('filter')) {
+        const wanted = params.get('filter');
+        const tab = document.querySelector('.filter-tab[data-filter="' + wanted + '"]');
+        if (tab) tab.click();
+    }
 </script>
 </body>
 </html>
